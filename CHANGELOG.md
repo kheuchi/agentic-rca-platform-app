@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/kheuchi/rag-platform-app/compare/v1.0.1...v1.1.0) (2026-03-17)
+
+
+### Features
+
+* **ci:** add supply chain security — CodeQL, Trivy gate, Cosign signing & SBOM attestation ([876aa6d](https://github.com/kheuchi/rag-platform-app/commit/876aa6d80dd33a921fc677095da988ec2bdb0ebc))
+
 ## [1.0.1](https://github.com/kheuchi/rag-platform-app/compare/v1.0.0...v1.0.1) (2026-03-16)
 
 
