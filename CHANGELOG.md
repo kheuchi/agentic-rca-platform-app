@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/kheuchi/rag-platform-app/compare/v1.1.3...v1.1.4) (2026-03-17)
+
+
+### Bug Fixes
+
+* **backend:** bump redis to 7.3.0 and drop explicit PyJWT pin ([e518efa](https://github.com/kheuchi/rag-platform-app/commit/e518efa6c0dee61c57caef2a1991ef5ac1337504))
+
 ## [1.1.3](https://github.com/kheuchi/rag-platform-app/compare/v1.1.2...v1.1.3) (2026-03-17)
 
 
