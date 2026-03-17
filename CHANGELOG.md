@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/kheuchi/rag-platform-app/compare/v1.1.4...v1.1.5) (2026-03-17)
+
+
+### Bug Fixes
+
+* **ci:** trigger CI on push to main for CodeQL dashboard ([1b752a2](https://github.com/kheuchi/rag-platform-app/commit/1b752a2a6e37bbad6aee5b31156ebbb87e9dadde))
+
 ## [1.1.4](https://github.com/kheuchi/rag-platform-app/compare/v1.1.3...v1.1.4) (2026-03-17)
 
 
