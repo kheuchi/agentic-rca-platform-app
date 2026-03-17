@@ -62,6 +62,7 @@ jobs:
             type=raw,value=latest
 
       - uses: docker/build-push-action@v6
+        id: build
         with:
           context: ${{ matrix.service }}/
           push: true
@@ -72,17 +73,14 @@ jobs:
         uses: sigstore/cosign-installer@v3
 
       - name: Sign image with Cosign (keyless)
-        env:
-          DIGEST: ${{ steps.meta.outputs.digest }}
-          TAGS: ${{ steps.meta.outputs.tags }}
         run: |
-          image=$(echo "$TAGS" | head -n1)
-          cosign sign --yes "${image}@${DIGEST}"
+          cosign sign --yes \
+            ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.build.outputs.digest }}
 
       - name: Trivy vulnerability scan (release image)
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.meta.outputs.digest }}
+          image-ref: ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.build.outputs.digest }}
           format: table
           exit-code: "1"
           severity: CRITICAL,HIGH
@@ -90,18 +88,16 @@ jobs:
       - name: Generate SBOM (SPDX)
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.meta.outputs.digest }}
+          image-ref: ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.build.outputs.digest }}
           format: spdx-json
           output: sbom-${{ matrix.service }}.spdx.json
 
       - name: Attest SBOM to image (Cosign)
-        env:
-          DIGEST: ${{ steps.meta.outputs.digest }}
         run: |
           cosign attest --yes \
             --predicate sbom-${{ matrix.service }}.spdx.json \
             --type spdxjson \
-            ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${DIGEST}
+            ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.build.outputs.digest }}
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
