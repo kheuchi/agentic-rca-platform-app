@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/kheuchi/rag-platform-app/compare/v1.1.1...v1.1.2) (2026-03-17)
+
+
+### Bug Fixes
+
+* **ci:** bump trivy-action from 0.28.0 to 0.35.0 ([5323f07](https://github.com/kheuchi/rag-platform-app/commit/5323f077e90eacf958a7650348e2fe988708ed8c))
+
 ## [1.1.1](https://github.com/kheuchi/rag-platform-app/compare/v1.1.0...v1.1.1) (2026-03-17)
 
 
