@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/kheuchi/rag-platform-app/compare/v1.1.2...v1.1.3) (2026-03-17)
+
+
+### Bug Fixes
+
+* **backend:** bump fastapi to 0.135.1 and pin PyJWT>=2.12.0 ([b4097f8](https://github.com/kheuchi/rag-platform-app/commit/b4097f89ae3fb21f4ad1dab31a1a5e9e19c953bb))
+
 ## [1.1.2](https://github.com/kheuchi/rag-platform-app/compare/v1.1.1...v1.1.2) (2026-03-17)
 
 
