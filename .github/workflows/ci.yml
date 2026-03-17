@@ -52,7 +52,7 @@ jobs:
         run: docker build -t test-${{ matrix.service }}:${{ github.sha }} ${{ matrix.service }}/
 
       - name: Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: test-${{ matrix.service }}:${{ github.sha }}
           format: table
