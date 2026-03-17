@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/kheuchi/rag-platform-app/compare/v1.1.0...v1.1.1) (2026-03-17)
+
+
+### Bug Fixes
+
+* **ci:** use build-push-action digest output for Cosign signing and SBOM ([884ab42](https://github.com/kheuchi/rag-platform-app/commit/884ab42206e5d5b286391b7ab029e800f0131204))
+
 # [1.1.0](https://github.com/kheuchi/rag-platform-app/compare/v1.0.1...v1.1.0) (2026-03-17)
 
 
