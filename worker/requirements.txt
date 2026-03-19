@@ -1,1 +1,10 @@
 nats-py==2.10.0
+pydantic>=2.11
+pydantic-settings>=2.13
+docling>=2.80
+llama-index-core>=0.14
+llama-index-vector-stores-azureaisearch>=0.5
+llama-index-embeddings-azure-openai>=0.5
+azure-search-documents>=11.6
+gitpython>=3.1
+langchain-openai>=1.1
