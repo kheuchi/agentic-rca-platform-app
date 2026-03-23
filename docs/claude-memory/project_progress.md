@@ -4,41 +4,49 @@ description: What has been implemented so far and where to resume — tracks com
 type: project
 ---
 
-## Repo state as of 2026-03-19
+## Repo state as of 2026-03-23
 
-### Completed
-- **Scaffold**: FastAPI backend (/health, /ingest, /query stub) + NATS JetStream worker (durable consumer, no-op processing)
-- **Docker**: Both services containerized (python:3.12-slim), images on ghcr.io/kheuchi/rag-backend and rag-worker
-- **CI/CD**: semantic-release (cycjimmy/semantic-release-action@v4), auto CHANGELOG, Docker push via matrix strategy
-- **Supply chain security**: CodeQL SAST (Python), Trivy vulnerability gate (HIGH/CRITICAL), Cosign keyless signing, SPDX SBOM with Cosign attestation
-- **Dependency fixes**: redis bumped to 7.3.0 (PyJWT now optional), dropped explicit PyJWT pin, fixed starlette CVE-2025-62727 via FastAPI bump
-- **Bug fixes**: Cosign digest issue (was using empty $DIGEST from metadata-action, fixed to use build-push-action output), Trivy action bumped from 0.28.0 to 0.35.0
-
-### Current versions
-- Latest release: ~v1.1.4 (check git tags for exact)
-- FastAPI 0.135.1, redis 7.3.0, nats-py 2.10.0, pydantic 2.11.1
-
-### Deployed on AKS
+### Infrastructure (unchanged)
 - Cluster: aks-rag-dev (East US, 2 nodes Standard_DC2as_v5)
 - NATS JetStream: namespace nats, service nats-helm (port 4222)
-- KEDA 2.16.1: namespace keda (ScaledObject on rag-worker — NOTE: stream name mismatch rag-ingest vs RAG, needs fix in Phase 4.1)
-- Redis Azure: via Crossplane (Basic tier — NOT suitable for RediSearch, but OK since we use Azure AI Search now)
+- KEDA 2.16.1: namespace keda (ScaledObject — stream name mismatch rag-ingest vs RAG still needs fix in gitops)
+- Redis Azure: via Crossplane (Basic tier — cache only, not vector store)
 - ArgoCD: https://13.92.13.5
 
-### NOT yet implemented (Phase 4)
-- Code ingestion pipeline (cold path)
-- LangGraph RCA agent (hot path)
-- Keycloak authentication
-- Chainlit UI
-- OpenTelemetry Demo deployment
-- Azure AI Search / Azure OpenAI provisioning
-- Architecture plan written: docs/phase4-architecture.md
+### CI/CD & Supply Chain (completed earlier)
+- semantic-release (cycjimmy/semantic-release-action@v4), auto CHANGELOG
+- CodeQL SAST, Trivy vulnerability gate, Cosign keyless signing, SPDX SBOM
 
-### Known issues to fix in Phase 4.1
-- KEDA ScaledObject stream name: `rag-ingest` should be `RAG` (in rag-platform-gitops)
-- CodeQL needs `push` trigger on main in ci.yml (currently only on PR, never ran because user pushes directly to main)
-- Backend /query returns hardcoded stub `{"status": "not_implemented"}`
-- Worker process_message is a no-op (log + sleep 100ms + ack)
+### Phase 4 Progress
 
-**Why:** Track what's done vs what's next so future sessions can resume without re-exploring the codebase.
-**How to apply:** Read this memory at the start of any new conversation to know the current state. Check git log for any changes since 2026-03-19.
+**✅ Phase 4.1: Foundation (commit 8f55f0f)**
+- Backend restructured: main.py → config.py + routers/ + agent/ + llm/
+- Worker restructured: config.py + pipeline/ modules
+- pydantic-settings for all env vars
+- LLM providers: Azure OpenAI (primary) + Vertex AI (fallback)
+- Dockerfiles updated (Docling system deps)
+
+**✅ Phase 4.2: Cold Path — Ingestion Pipeline (commit 8051c3a)**
+- clone.py, parse.py, chunk.py, embed.py, store.py — full pipeline
+- Dual NATS subscription (rag.ingest + rag.ingest.repo)
+- Job status tracking via Redis
+- Azure AI Search as vector store (not Redis)
+
+**✅ Phase 4.3: Hot Path — Observability Tools (commit 392da25)**
+- code_search.py: hybrid search Azure AI Search
+- loki.py: LogQL, prometheus.py: PromQL, tempo.py: TraceQL
+- All async, httpx, @langchain_core.tools.tool decorated
+
+**🔜 Phase 4.4: LangGraph RCA Agent (NEXT)**
+- agent/graph.py, agent/nodes.py — build the StateGraph
+- POST /query/rca endpoint with SSE streaming
+- POST /query → simple vector search
+
+**Pending:**
+- Phase 4.5: Deploy OTel Demo on AKS, end-to-end test
+- Phase 4.6: Multi-cloud validation
+- Keycloak auth, Chainlit UI (future phases)
+- Azure AI Search + Azure OpenAI provisioning (infra repo)
+
+**Why:** Track what's done vs what's next so future sessions can resume without re-exploring.
+**How to apply:** Read this at start of new conversation. Check git log for changes since 2026-03-23.

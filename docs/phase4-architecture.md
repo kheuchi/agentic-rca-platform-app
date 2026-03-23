@@ -420,24 +420,32 @@ langchain-openai>=0.2              # For embeddings
 
 ## 14. Implementation Sub-phases
 
-### Phase 4.1: Foundation
-- Restructure backend into `routers/`, `agent/`, `llm/`, `config.py`
-- Restructure worker into `pipeline/` modules
-- Add pydantic-settings configuration
-- Set up LLM provider abstraction with Azure OpenAI + Vertex AI fallback
-- Update Dockerfiles (Docling system deps)
+### Phase 4.1: Foundation ✅ (2026-03-21)
+- ✅ Restructure backend into `routers/`, `agent/`, `llm/`, `config.py`
+- ✅ Restructure worker into `pipeline/` modules
+- ✅ Add pydantic-settings configuration
+- ✅ Set up LLM provider abstraction with Azure OpenAI + Vertex AI fallback
+- ✅ Update Dockerfiles (Docling system deps)
+- Commit: `8f55f0f`
 
-### Phase 4.2: Cold Path — Ingestion Pipeline
-- Implement `worker/pipeline/` (clone, parse, chunk, embed, store)
-- Update `worker/main.py` for `rag.ingest.repo` subject
-- Implement `POST /ingest/repo` and `GET /ingest/status/{job_id}`
-- Test: ingest OTel Demo repo into Azure AI Search
+### Phase 4.2: Cold Path — Ingestion Pipeline ✅ (2026-03-21)
+- ✅ Implement `worker/pipeline/` (clone, parse, chunk, embed, store)
+- ✅ Update `worker/main.py` for dual NATS subscription (`rag.ingest` + `rag.ingest.repo`)
+- ✅ Implement `POST /ingest/repo` and `GET /ingest/status/{job_id}`
+- ✅ Job status tracking via Redis (progress, chunks_indexed, errors)
+- ⏳ Test: ingest OTel Demo repo into Azure AI Search (requires infra)
+- Commit: `8051c3a`
 
-### Phase 4.3: Hot Path — Observability Tools
-- Implement `agent/tools/` (code_search, loki, prometheus, tempo)
-- Test each tool against OTel Demo stack
+### Phase 4.3: Hot Path — Observability Tools ✅ (2026-03-21)
+- ✅ Implement `agent/tools/code_search.py` — hybrid search (vector + keyword) via Azure AI Search REST API
+- ✅ Implement `agent/tools/loki.py` — LogQL query_range HTTP client
+- ✅ Implement `agent/tools/prometheus.py` — PromQL query_range HTTP client
+- ✅ Implement `agent/tools/tempo.py` — TraceQL search + trace detail fetch
+- ✅ All tools async, httpx-based, `@langchain_core.tools.tool` decorated
+- ⏳ Test each tool against OTel Demo stack (requires Phase 4.5 deploy)
+- Commit: `392da25`
 
-### Phase 4.4: LangGraph RCA Agent
+### Phase 4.4: LangGraph RCA Agent 🔜
 - Define agent state, nodes, graph
 - Implement `POST /query/rca` with SSE streaming
 - Evolve `POST /query` to simple vector search
