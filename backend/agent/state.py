@@ -1,8 +1,10 @@
 """RCA agent state definition for LangGraph."""
 
-from typing import TypedDict
+import operator
+from typing import Annotated, TypedDict
 
 from langchain_core.messages import BaseMessage
+from langgraph.graph import add_messages
 
 
 class RCAState(TypedDict):
@@ -12,14 +14,14 @@ class RCAState(TypedDict):
     service: str | None
     time_range: str
 
-    # Accumulated evidence
-    code_context: list[dict]
-    log_findings: list[dict]
-    metric_findings: list[dict]
-    trace_findings: list[dict]
+    # Accumulated evidence (reducers append instead of overwrite)
+    code_context: Annotated[list[dict], operator.add]
+    log_findings: Annotated[list[dict], operator.add]
+    metric_findings: Annotated[list[dict], operator.add]
+    trace_findings: Annotated[list[dict], operator.add]
 
     # Reasoning
-    hypotheses: list[str]
+    hypotheses: Annotated[list[str], operator.add]
     current_step: str
     iteration: int
     max_iterations: int
@@ -28,4 +30,4 @@ class RCAState(TypedDict):
     root_cause: str
     confidence: float
     evidence_summary: dict
-    messages: list[BaseMessage]
+    messages: Annotated[list[BaseMessage], add_messages]

@@ -445,10 +445,11 @@ langchain-openai>=0.2              # For embeddings
 - ⏳ Test each tool against OTel Demo stack (requires Phase 4.5 deploy)
 - Commit: `392da25`
 
-### Phase 4.4: LangGraph RCA Agent 🔜
-- Define agent state, nodes, graph
-- Implement `POST /query/rca` with SSE streaming
-- Evolve `POST /query` to simple vector search
+### Phase 4.4: LangGraph RCA Agent ✅ (2026-03-24)
+- ✅ `agent/state.py` — Annotated reducers for list accumulation (`operator.add`, `add_messages`)
+- ✅ `agent/nodes.py` — `plan_search`, `execute_tools`, `correlate_findings`, `should_continue`, `synthesize_root_cause`
+- ✅ `agent/graph.py` — StateGraph: plan → execute → correlate → continue/synthesize → END
+- ✅ `routers/query.py` — `POST /query` (vector search) + `POST /query/rca` (sync + SSE streaming)
 
 ### Phase 4.5: Integration & Demo
 - Deploy OTel Demo to AKS via ArgoCD

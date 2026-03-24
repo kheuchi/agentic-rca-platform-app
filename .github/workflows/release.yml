@@ -61,13 +61,34 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ needs.release.outputs.new_release_version }}
             type=raw,value=latest
 
-      - uses: docker/build-push-action@v6
+      - name: Build image (local)
+        uses: docker/build-push-action@v6
         id: build
         with:
           context: ${{ matrix.service }}/
-          push: true
+          push: false
+          load: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Trivy vulnerability scan (before push)
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}:${{ needs.release.outputs.new_release_version }}
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+
+      - name: Push image
+        run: docker push --all-tags ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}
+
+      - name: Get image digest
+        id: digest
+        run: |
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' \
+            ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}:${{ needs.release.outputs.new_release_version }} \
+            | cut -d@ -f2)
+          echo "value=$DIGEST" >> "$GITHUB_OUTPUT"
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
@@ -75,20 +96,12 @@ jobs:
       - name: Sign image with Cosign (keyless)
         run: |
           cosign sign --yes \
-            ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.build.outputs.digest }}
-
-      - name: Trivy vulnerability scan (release image)
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.build.outputs.digest }}
-          format: table
-          exit-code: "1"
-          severity: CRITICAL,HIGH
+            ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.digest.outputs.value }}
 
       - name: Generate SBOM (SPDX)
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.build.outputs.digest }}
+          image-ref: ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.digest.outputs.value }}
           format: spdx-json
           output: sbom-${{ matrix.service }}.spdx.json
 
@@ -97,7 +110,7 @@ jobs:
           cosign attest --yes \
             --predicate sbom-${{ matrix.service }}.spdx.json \
             --type spdxjson \
-            ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.build.outputs.digest }}
+            ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.digest.outputs.value }}
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
