@@ -1,3 +1,10 @@
+## [1.3.4](https://github.com/kheuchi/rag-platform-app/compare/v1.3.3...v1.3.4) (2026-03-29)
+
+
+### Bug Fixes
+
+* bump pydantic>=2.11.5, free more disk + scanners=vuln for Trivy ([297cf4e](https://github.com/kheuchi/rag-platform-app/commit/297cf4e084cebd3433db00775a2cc8268da52e4c))
+
 ## [1.3.3](https://github.com/kheuchi/rag-platform-app/compare/v1.3.2...v1.3.3) (2026-03-29)
 
 
