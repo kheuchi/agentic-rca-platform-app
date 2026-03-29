@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/kheuchi/rag-platform-app/compare/v1.3.5...v1.4.0) (2026-03-29)
+
+
+### Features
+
+* Phase 4.5d — add e2e smoke test script ([6d44adf](https://github.com/kheuchi/rag-platform-app/commit/6d44adfdc4121d8542c7ef3781fe845999637183))
+
 ## [1.3.5](https://github.com/kheuchi/rag-platform-app/compare/v1.3.4...v1.3.5) (2026-03-29)
 
 
