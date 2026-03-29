@@ -1,33 +1,31 @@
-"""Azure AI Search upsert step — store embedded chunks in vector index."""
+"""Firestore upsert step — store embedded chunks in vector collection."""
 
 import logging
 
-from azure.search.documents import SearchClient
-from azure.core.credentials import AzureKeyCredential
+from google.cloud.firestore import Client as FirestoreClient
+from google.cloud.firestore_v1.vector import Vector
 from llama_index.core.schema import TextNode
 
 from config import settings
 
 logger = logging.getLogger(__name__)
 
-UPLOAD_BATCH_SIZE = 100
+UPLOAD_BATCH_SIZE = 500  # Firestore batch limit
 
 
-def get_search_client() -> SearchClient:
-    """Create an Azure AI Search client."""
-    return SearchClient(
-        endpoint=settings.azure_search_endpoint,
-        index_name=settings.azure_search_index,
-        credential=AzureKeyCredential(settings.azure_search_api_key),
+def get_firestore_client() -> FirestoreClient:
+    """Create a Firestore client (uses WIF / ADC credentials)."""
+    return FirestoreClient(
+        project=settings.gcp_project_id,
+        database=settings.firestore_database,
     )
 
 
 def _node_to_document(node: TextNode) -> dict:
-    """Convert a LlamaIndex TextNode to an Azure AI Search document."""
+    """Convert a LlamaIndex TextNode to a Firestore document."""
     return {
-        "id": node.id_.replace(":", "-"),  # Azure AI Search keys can't contain ':'
         "content": node.get_content(),
-        "embedding": node.embedding,
+        "embedding": Vector(node.embedding),
         "file_path": node.metadata.get("file_path", ""),
         "service_name": node.metadata.get("service_name", ""),
         "language": node.metadata.get("language", ""),
@@ -38,7 +36,7 @@ def _node_to_document(node: TextNode) -> dict:
 
 
 def store_chunks(nodes: list[TextNode]) -> int:
-    """Upsert embedded chunks into Azure AI Search.
+    """Upsert embedded chunks into Firestore.
 
     Args:
         nodes: TextNode list with embeddings from embed_chunks().
@@ -49,26 +47,31 @@ def store_chunks(nodes: list[TextNode]) -> int:
     if not nodes:
         return 0
 
-    client = get_search_client()
+    db = get_firestore_client()
+    collection = db.collection(settings.firestore_collection)
     total_uploaded = 0
 
     for i in range(0, len(nodes), UPLOAD_BATCH_SIZE):
-        batch = nodes[i : i + UPLOAD_BATCH_SIZE]
-        documents = [_node_to_document(node) for node in batch]
+        batch_nodes = nodes[i : i + UPLOAD_BATCH_SIZE]
+        batch = db.batch()
 
-        result = client.merge_or_upload_documents(documents)
+        for node in batch_nodes:
+            doc_id = node.id_.replace(":", "-")
+            doc_ref = collection.document(doc_id)
+            batch.set(doc_ref, _node_to_document(node), merge=True)
 
-        succeeded = sum(1 for r in result if r.succeeded)
+        batch.commit()
+        succeeded = len(batch_nodes)
         total_uploaded += succeeded
 
         logger.info(
-            "Upserted batch %d-%d: %d/%d succeeded",
+            "Upserted batch %d-%d: %d succeeded",
             i, min(i + UPLOAD_BATCH_SIZE, len(nodes)),
-            succeeded, len(batch),
+            succeeded,
         )
 
     logger.info(
-        "Stored %d/%d chunks in Azure AI Search index '%s'",
-        total_uploaded, len(nodes), settings.azure_search_index,
+        "Stored %d/%d chunks in Firestore collection '%s'",
+        total_uploaded, len(nodes), settings.firestore_collection,
     )
     return total_uploaded

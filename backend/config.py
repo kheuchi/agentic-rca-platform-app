@@ -18,10 +18,9 @@ class Settings(BaseSettings):
     azure_openai_chat_deployment: str = "gpt-4o"
     azure_openai_embedding_deployment: str = "text-embedding-3-small"
 
-    # Azure AI Search (vector store)
-    azure_search_endpoint: str = ""
-    azure_search_api_key: str = ""
-    azure_search_index: str = "code-chunks"
+    # GCP Firestore (vector store)
+    firestore_database: str = "(default)"
+    firestore_collection: str = "code-chunks"
 
     # GCP (fallback)
     gcp_project_id: str = ""

@@ -1,13 +1,22 @@
-"""Code vector search tool — hybrid search against Azure AI Search."""
+"""Code vector search tool — vector search against GCP Firestore."""
 
 import logging
 
-import httpx
+from google.cloud.firestore import Client as FirestoreClient
+from google.cloud.firestore_v1.base_vector_query import DistanceMeasure
+from google.cloud.firestore_v1.vector import Vector
 from langchain_core.tools import tool
 
 from config import settings
 
 logger = logging.getLogger(__name__)
+
+
+def _get_firestore_client() -> FirestoreClient:
+    return FirestoreClient(
+        project=settings.gcp_project_id,
+        database=settings.firestore_database,
+    )
 
 
 @tool
@@ -37,47 +46,31 @@ async def search_code_vectors(
     )
     query_embedding = await embed_model.aget_text_embedding(query)
 
-    # Build Azure AI Search request (hybrid: vector + keyword)
-    search_body: dict = {
-        "search": query,
-        "vectorQueries": [
-            {
-                "kind": "vector",
-                "vector": query_embedding,
-                "fields": "embedding",
-                "k": top_k,
-            }
-        ],
-        "top": top_k,
-        "select": "id,content,file_path,service_name,language,chunk_index,repo_url",
-    }
+    # Firestore vector search
+    db = _get_firestore_client()
+    collection = db.collection(settings.firestore_collection)
+
+    query_ref = collection
 
     if service_filter:
-        search_body["filter"] = f"service_name eq '{service_filter}'"
+        query_ref = query_ref.where("service_name", "==", service_filter)
 
-    url = f"{settings.azure_search_endpoint}/indexes/{settings.azure_search_index}/docs/search?api-version=2024-07-01"
-
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            url,
-            json=search_body,
-            headers={
-                "Content-Type": "application/json",
-                "api-key": settings.azure_search_api_key,
-            },
-            timeout=30,
-        )
-        resp.raise_for_status()
-        data = resp.json()
+    vector_query = query_ref.find_nearest(
+        vector_field="embedding",
+        query_vector=Vector(query_embedding),
+        distance_measure=DistanceMeasure.COSINE,
+        limit=top_k,
+    )
 
     results = []
-    for doc in data.get("value", []):
+    for doc in vector_query.get():
+        data = doc.to_dict()
         results.append({
-            "file_path": doc.get("file_path", ""),
-            "service_name": doc.get("service_name", ""),
-            "language": doc.get("language", ""),
-            "content": doc.get("content", ""),
-            "score": doc.get("@search.score", 0),
+            "file_path": data.get("file_path", ""),
+            "service_name": data.get("service_name", ""),
+            "language": data.get("language", ""),
+            "content": data.get("content", ""),
+            "score": data.get("distance", 0),
         })
 
     logger.info("Code search: %d results for query='%s' service=%s", len(results), query[:50], service_filter)

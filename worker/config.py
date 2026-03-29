@@ -14,10 +14,10 @@ class Settings(BaseSettings):
     azure_openai_api_key: str = ""
     azure_openai_embedding_deployment: str = "text-embedding-3-small"
 
-    # Azure AI Search (vector store)
-    azure_search_endpoint: str = ""
-    azure_search_api_key: str = ""
-    azure_search_index: str = "code-chunks"
+    # GCP Firestore (vector store)
+    gcp_project_id: str = ""
+    firestore_database: str = "(default)"
+    firestore_collection: str = "code-chunks"
 
     # Redis (job status tracking)
     redis_host: str = "localhost"
