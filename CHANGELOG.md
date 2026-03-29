@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/kheuchi/rag-platform-app/compare/v1.3.2...v1.3.3) (2026-03-29)
+
+
+### Bug Fixes
+
+* pin llama-index-core==0.14.18 to stop pip backtrack, free disk for Trivy ([856b3cb](https://github.com/kheuchi/rag-platform-app/commit/856b3cbd02af1a28fd9de9c9d10d4e081eb191e0))
+
 ## [1.3.2](https://github.com/kheuchi/rag-platform-app/compare/v1.3.1...v1.3.2) (2026-03-29)
 
 
