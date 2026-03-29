@@ -1,0 +1,4 @@
+# Unfixed CVEs in python:3.12-slim (Debian Trixie) — no patches available
+# Re-evaluate when base image is updated
+CVE-2026-24882
+CVE-2026-25210
