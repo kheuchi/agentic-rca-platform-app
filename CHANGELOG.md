@@ -1,3 +1,13 @@
+# [1.2.0](https://github.com/kheuchi/rag-platform-app/compare/v1.1.5...v1.2.0) (2026-03-29)
+
+
+### Features
+
+* Phase 4.1 — restructure backend and worker into modular packages [skip ci] ([8f55f0f](https://github.com/kheuchi/rag-platform-app/commit/8f55f0f3c732de81fddbb37627ffb8fb1287fba5))
+* Phase 4.2 — implement cold path ingestion pipeline [skip ci] ([8051c3a](https://github.com/kheuchi/rag-platform-app/commit/8051c3ac9f6242b32b9fff47aa8e87069df837f9))
+* Phase 4.3 — implement hot path observability tools [skip ci] ([392da25](https://github.com/kheuchi/rag-platform-app/commit/392da25d6fe3e385aa08aa8094bb4ee67cb2267d))
+* Phase 4.4 — implement LangGraph RCA agent with SSE streaming [skip ci] ([2084e06](https://github.com/kheuchi/rag-platform-app/commit/2084e06cd02ba45f9b80f95f4e26d806cf14b253))
+
 ## [1.1.5](https://github.com/kheuchi/rag-platform-app/compare/v1.1.4...v1.1.5) (2026-03-17)
 
 
