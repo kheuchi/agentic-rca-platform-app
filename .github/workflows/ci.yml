@@ -53,6 +53,11 @@ jobs:
       - name: Build image (no push)
         run: docker build -t test-${{ matrix.service }}:${{ github.sha }} ${{ matrix.service }}/
 
+      - name: Free disk space for Trivy
+        run: |
+          docker builder prune -f
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+
       - name: Trivy vulnerability scan
         uses: aquasecurity/trivy-action@0.35.0
         with:

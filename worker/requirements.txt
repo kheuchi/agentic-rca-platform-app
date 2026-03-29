@@ -3,7 +3,7 @@ redis[hiredis]==7.3.0
 pydantic>=2.11
 pydantic-settings>=2.13
 docling>=2.80
-llama-index-core>=0.14
+llama-index-core==0.14.18
 llama-index-embeddings-azure-openai>=0.5
 google-cloud-firestore>=2.19
 gitpython>=3.1
