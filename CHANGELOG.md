@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/kheuchi/rag-platform-app/compare/v1.3.1...v1.3.2) (2026-03-29)
+
+
+### Bug Fixes
+
+* langchain-core>=1.1,<2 — v2.0 does not exist on PyPI yet ([2c646f8](https://github.com/kheuchi/rag-platform-app/commit/2c646f88ae19ae1c2a945f7ea98fa545740e4866))
+
 ## [1.3.1](https://github.com/kheuchi/rag-platform-app/compare/v1.3.0...v1.3.1) (2026-03-29)
 
 
