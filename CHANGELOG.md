@@ -1,3 +1,15 @@
+# [1.3.0](https://github.com/kheuchi/rag-platform-app/compare/v1.2.0...v1.3.0) (2026-03-29)
+
+
+### Bug Fixes
+
+* CI docker builds — libgl1-mesa-glx → libgl1, pin langsmith to avoid pip backtrack ([8f0ea76](https://github.com/kheuchi/rag-platform-app/commit/8f0ea76dcb0cbe8727afb14a09cfd8e1f82bdb52))
+
+
+### Features
+
+* Phase 4.5c — swap Azure AI Search → GCP Firestore vector store [skip ci] ([a2529f9](https://github.com/kheuchi/rag-platform-app/commit/a2529f949151b4694c179d7f66175e8eeb7e6ad3))
+
 # [1.2.0](https://github.com/kheuchi/rag-platform-app/compare/v1.1.5...v1.2.0) (2026-03-29)
 
 
