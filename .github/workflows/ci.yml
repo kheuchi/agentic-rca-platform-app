@@ -56,7 +56,8 @@ jobs:
       - name: Free disk space for Trivy
         run: |
           docker builder prune -f
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost /opt/hostedtoolcache
 
       - name: Trivy vulnerability scan
         uses: aquasecurity/trivy-action@0.35.0
@@ -65,3 +66,4 @@ jobs:
           format: table
           exit-code: "1"
           severity: CRITICAL,HIGH
+          scanners: vuln
