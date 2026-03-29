@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/kheuchi/rag-platform-app/compare/v1.3.0...v1.3.1) (2026-03-29)
+
+
+### Bug Fixes
+
+* pin langchain-core>=2.0 to match langchain-openai>=1.1 requirement ([b28543a](https://github.com/kheuchi/rag-platform-app/commit/b28543a5bf363ba4746069eded1ac365b4b35f2e))
+
 # [1.3.0](https://github.com/kheuchi/rag-platform-app/compare/v1.2.0...v1.3.0) (2026-03-29)
 
 
