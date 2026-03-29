@@ -1,3 +1,10 @@
+## [1.3.5](https://github.com/kheuchi/rag-platform-app/compare/v1.3.4...v1.3.5) (2026-03-29)
+
+
+### Bug Fixes
+
+* trivyignore unfixed Debian CVEs (gnupg CVE-2026-24882, libexpat CVE-2026-25210) ([063d0f4](https://github.com/kheuchi/rag-platform-app/commit/063d0f40e54c4e1bb9445c3fbee55983c1148e10))
+
 ## [1.3.4](https://github.com/kheuchi/rag-platform-app/compare/v1.3.3...v1.3.4) (2026-03-29)
 
 
