@@ -3,7 +3,7 @@
 > Ce fichier est la source de vérité du projet. Mis à jour à chaque fin de phase.
 > Il est dupliqué sur les 3 repos. Quand tu ouvres une nouvelle session Claude, dis-lui de lire ce fichier.
 
-## Dernière mise à jour : 2026-03-29
+## Dernière mise à jour : 2026-03-30
 
 ## Architecture globale
 
@@ -63,10 +63,23 @@ TEMPO_URL=http://otel-demo-tempo.otel-demo.svc.cluster.local:3200
 | 4.1-4.4 — FastAPI backend + worker + LangGraph RCA | app | ✅ Done |
 | 4.5a — Azure OpenAI + Firestore + AKS spot (Terraform) | infra | ✅ Done 2026-03-29 |
 | 4.5b — GitOps : env vars + OTel Demo + KEDA fix | gitops | ✅ Done 2026-03-29 |
-| **4.5c — Swap Azure AI Search → Firestore dans le code** | **app** | **⏳ En cours** |
-| 4.5d — e2e smoke test | app | ⬜ Pending |
+| 4.5c — Swap Azure AI Search → Firestore dans le code | app | ✅ Done 2026-03-29 |
+| **4.5d — e2e smoke test** | **app** | **⏳ En cours** |
 | 4.6 — Multi-cloud validation (Vertex AI fallback) | app | ⬜ Pending |
 | 5 — Langfuse + Kubecost | tous | ⬜ Pending |
+
+## Phase 4.5d — Blockers identifiés (2026-03-30)
+
+Le code app (store.py, code_search.py) est OK et les images Docker build/push OK (CI verte).
+Le pipeline worker fonctionne (clone → parse → chunk → embed) mais 3 blockers empêchent le smoke test complet :
+
+1. **KEDA ScaledObject en erreur** — le trigger NATS JetStream ne peut pas contacter `nats-helm:8222` (monitoring endpoint). KEDA force le worker à 0 replicas en boucle. Le ScaledObject est dans `tenants/rag-dev/` du repo gitops. ArgoCD `selfHeal: true` restaure le scaler même si on le supprime manuellement.
+   - **Fix** : dans le repo gitops, soit activer le port 8222 dans la config NATS Helm, soit changer `minReplicaCount: 0 → 1` dans le ScaledObject, soit corriger le trigger NATS.
+
+2. **Redis non accessible par le worker** — le worker log `Redis not available for status tracking: [Errno 111] Connect call failed ('localhost', 6380)`. Les env vars `REDIS_HOST`/`REDIS_KEY` du secret `rag-backend-secrets` ne semblent pas injectées dans le worker deployment.
+   - **Fix** : dans le repo gitops, vérifier l'envFrom du worker deployment.
+
+3. **Azure OpenAI rate limiting (429)** — le tier S0 rate-limit les embeddings (264 chunks). Le worker retry en boucle (60s backoff). Pas bloquant mais ralentit le test.
 
 ## Comptes
 

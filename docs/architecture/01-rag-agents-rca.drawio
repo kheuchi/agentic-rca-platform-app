@@ -1,0 +1,243 @@
+﻿<mxfile host="app.diagrams.net" modified="2026-04-02" type="device">
+  <diagram name="RAG + Agents - RCA" id="rag-agents-rca">
+    <mxGraphModel dx="1500" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- TITLE -->
+        <mxCell id="title" value="&lt;b&gt;Architecture RAG + Agents - Root Cause Analysis&lt;/b&gt;&lt;br&gt;(style Datadog / BitsAI)" style="text;html=1;align=center;verticalAlign=middle;fontSize=18;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="400" y="15" width="520" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- USER -->
+        <mxCell id="user" value="&lt;b&gt;SRE / Dev&lt;/b&gt;" style="shape=mxgraph.azure.user;html=1;fillColor=#E8EAF6;strokeColor=#3949AB;fontColor=#1a1a2e;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="330" width="50" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ FRONTEND ============ -->
+        <mxCell id="grp_front" value="" style="rounded=1;whiteSpace=wrap;dashed=1;dashPattern=5 5;fillColor=#F3E5F5;strokeColor=#7B1FA2;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="180" y="280" width="160" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="lbl_front" value="&lt;b&gt;Frontend&lt;/b&gt;" style="text;html=1;align=center;fontSize=11;fontColor=#7B1FA2;" vertex="1" parent="1">
+          <mxGeometry x="210" y="285" width="100" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="ico_chainlit" value="" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;image=https://raw.githubusercontent.com/Chainlit/docs/main/favicon.svg;" vertex="1" parent="1">
+          <mxGeometry x="192" y="318" width="28" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="chainlit" value="&lt;b&gt;Chainlit&lt;/b&gt;&lt;br&gt;Chat UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#7B1FA2;fontColor=#1a1a2e;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="222" y="315" width="100" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="swagger" value="&lt;b&gt;Swagger&lt;/b&gt; /docs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#7B1FA2;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="375" width="110" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ API BACKEND ============ -->
+        <mxCell id="grp_api" value="" style="rounded=1;whiteSpace=wrap;dashed=1;dashPattern=5 5;fillColor=#E3F2FD;strokeColor=#1565C0;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="400" y="270" width="160" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="lbl_api" value="&lt;b&gt;API Backend&lt;/b&gt;" style="text;html=1;align=center;fontSize=11;fontColor=#1565C0;" vertex="1" parent="1">
+          <mxGeometry x="420" y="275" width="120" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="fastapi" value="&lt;b&gt;FastAPI&lt;/b&gt;&lt;br&gt;/query/rca&lt;br&gt;/query&lt;br&gt;/ingest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#90CAF9;strokeColor=#1565C0;fontColor=#1a1a2e;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="300" width="120" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="auth" value="&lt;b&gt;Auth&lt;/b&gt; - API Key" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="385" width="120" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ LANGGRAPH ORCHESTRATOR ============ -->
+        <mxCell id="grp_orchestrator" value="" style="rounded=1;whiteSpace=wrap;dashed=1;dashPattern=5 5;fillColor=#E8F5E9;strokeColor=#2E7D32;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="620" y="130" width="400" height="300" as="geometry"/>
+        </mxCell>
+        <mxCell id="ico_langgraph" value="" style="shape=image;html=1;aspect=fixed;image=https://raw.githubusercontent.com/langchain-ai/langgraph/main/.github/images/logo-light.svg;" vertex="1" parent="1">
+          <mxGeometry x="635" y="138" width="28" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="lbl_orch" value="&lt;b&gt;LangGraph - Orchestrateur Agent RCA&lt;/b&gt;" style="text;html=1;align=center;fontSize=12;fontColor=#2E7D32;" vertex="1" parent="1">
+          <mxGeometry x="665" y="140" width="330" height="24" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="plan" value="&lt;b&gt;plan_search&lt;/b&gt;&lt;br&gt;LLM decide quels&lt;br&gt;tools appeler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="190" width="140" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="execute" value="&lt;b&gt;execute_tools&lt;/b&gt;&lt;br&gt;Appels paralleles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="850" y="190" width="140" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="correlate" value="&lt;b&gt;correlate_findings&lt;/b&gt;&lt;br&gt;Hypotheses" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="850" y="280" width="140" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="synthesize" value="&lt;b&gt;synthesize_root_cause&lt;/b&gt;&lt;br&gt;Rapport RCA final" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#66BB6A;strokeColor=#2E7D32;fontColor=#ffffff;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="330" width="160" height="55" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="loop_lbl" value="&lt;i&gt;boucle si besoin&lt;br&gt;de plus de preuves&lt;/i&gt;" style="text;html=1;align=center;fontSize=9;fontColor=#FF6F00;" vertex="1" parent="1">
+          <mxGeometry x="810" y="350" width="100" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- edges inside graph -->
+        <mxCell id="e_plan_exec" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2E7D32;strokeWidth=2;" edge="1" parent="1" source="plan" target="execute">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_exec_corr" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2E7D32;strokeWidth=2;" edge="1" parent="1" source="execute" target="correlate">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_corr_synth" value="synthesize" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2E7D32;strokeWidth=2;fontSize=9;" edge="1" parent="1" source="correlate" target="synthesize">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_corr_loop" value="continue" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#FF6F00;strokeWidth=2;dashed=1;fontSize=9;" edge="1" parent="1" source="correlate" target="plan">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1010" y="307"/>
+              <mxPoint x="1010" y="130"/>
+              <mxPoint x="710" y="130"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============ LANGCHAIN TOOLS ============ -->
+        <mxCell id="grp_tools" value="" style="rounded=1;whiteSpace=wrap;dashed=1;dashPattern=5 5;fillColor=#FFF3E0;strokeColor=#E65100;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="620" y="480" width="400" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="ico_langchain" value="" style="shape=image;html=1;aspect=fixed;image=https://raw.githubusercontent.com/langchain-ai/langchain/master/.github/images/logo-light.svg;" vertex="1" parent="1">
+          <mxGeometry x="700" y="486" width="24" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="lbl_tools" value="&lt;b&gt;LangChain Tools&lt;/b&gt; (hot path)" style="text;html=1;align=center;fontSize=11;fontColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="726" y="486" width="200" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ico_grafana1" value="" style="shape=image;html=1;aspect=fixed;image=https://raw.githubusercontent.com/grafana/grafana/main/public/app/features/plugins/admin/img/logo.svg;" vertex="1" parent="1">
+          <mxGeometry x="645" y="525" width="22" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="tool_loki" value="&lt;b&gt;Loki&lt;/b&gt;&lt;br&gt;Logs (LogQL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="630" y="540" width="85" height="45" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ico_prom" value="" style="shape=image;html=1;aspect=fixed;image=https://raw.githubusercontent.com/prometheus/prometheus/main/documentation/images/prometheus-logo.svg;" vertex="1" parent="1">
+          <mxGeometry x="740" y="516" width="22" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="tool_prom" value="&lt;b&gt;Prometheus&lt;/b&gt;&lt;br&gt;Metrics (PromQL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="725" y="540" width="95" height="45" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ico_grafana2" value="" style="shape=image;html=1;aspect=fixed;image=https://raw.githubusercontent.com/grafana/grafana/main/public/app/features/plugins/admin/img/logo.svg;" vertex="1" parent="1">
+          <mxGeometry x="760" y="525" width="22" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="tool_tempo" value="&lt;b&gt;Tempo&lt;/b&gt;&lt;br&gt;Traces" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="830" y="540" width="75" height="45" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="tool_code" value="&lt;b&gt;Firestore&lt;/b&gt;&lt;br&gt;Code vectors" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="920" y="540" width="85" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="ico_firestore" value="" style="shape=image;html=1;aspect=fixed;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224px%22%20height%3D%2224px%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cdefs%3E%3Cstyle%3E.cls-1%7Bfill%3A%23669df6%3B%7D.cls-2%7Bfill%3A%23aecbfa%3B%7D.cls-3%7Bfill%3A%234285f4%3B%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Ctitle%3EIcon_24px_Firestore_Color%3C%2Ftitle%3E%3Cg%20data-name%3D%22Product%20Icons%22%3E%3Cg%20data-name%3D%22colored-32%2Ffirestore%22%3E%3Cg%20%3E%3Cpath%20class%3D%22cls-1%22%20d%3D%22M21%2C13%2C12%2C9v4l9%2C4Zm0-7L12%2C2V6l9%2C4Z%22%2F%3E%3Cpolygon%20id%3D%22Rectangle-7%22%20class%3D%22cls-2%22%20points%3D%223%206%2012%202%2012%206%203%2010%203%206%22%2F%3E%3Cpolygon%20id%3D%22Rectangle-7-2%22%20data-name%3D%22Rectangle-7%22%20class%3D%22cls-2%22%20points%3D%223%2013%2012%209%2012%2013%203%2017%203%2013%22%2F%3E%3Cpolygon%20id%3D%22Rectangle-7-3%22%20data-name%3D%22Rectangle-7%22%20class%3D%22cls-3%22%20points%3D%2212%2018%2015.37%2016.5%2019.88%2018.5%2012%2022%2012%2018%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E;" vertex="1" parent="1">
+          <mxGeometry x="950" y="516" width="22" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e_exec_tools" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#E65100;strokeWidth=2;" edge="1" parent="1" source="execute" target="grp_tools">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ COLD PATH â€” INGESTION ============ -->
+        <mxCell id="grp_ingest" value="" style="rounded=1;whiteSpace=wrap;dashed=1;dashPattern=5 5;fillColor=#ECEFF1;strokeColor=#455A64;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="370" y="530" width="200" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="lbl_ingest" value="&lt;b&gt;Cold Path - Ingestion&lt;/b&gt;" style="text;html=1;align=center;fontSize=11;fontColor=#455A64;" vertex="1" parent="1">
+          <mxGeometry x="390" y="535" width="160" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ico_nats" value="" style="shape=image;html=1;aspect=fixed;image=https://raw.githubusercontent.com/nats-io/nats.docs/main/docs/assets/images/nats.svg;" vertex="1" parent="1">
+          <mxGeometry x="385" y="565" width="22" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="nats" value="&lt;b&gt;NATS&lt;/b&gt; JetStream" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CFD8DC;strokeColor=#455A64;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="410" y="562" width="130" height="35" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="worker" value="&lt;b&gt;Worker&lt;/b&gt;&lt;br&gt;Parse, Chunk, Embed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CFD8DC;strokeColor=#455A64;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="410" y="615" width="130" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ico_redis" value="" style="shape=image;html=1;aspect=fixed;image=https://media.ffycdn.net/us/redis/bj9dJaU5JPb3UAHMajbR.png?width=128;" vertex="1" parent="1">
+          <mxGeometry x="385" y="670" width="22" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="redis" value="&lt;b&gt;Redis&lt;/b&gt; Job status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CFD8DC;strokeColor=#455A64;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="410" y="667" width="130" height="35" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="keda" value="&lt;b&gt;KEDA&lt;/b&gt; Autoscale workers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CFD8DC;strokeColor=#455A64;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="410" y="720" width="130" height="35" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e_nats_worker" style="html=1;strokeColor=#455A64;strokeWidth=1;" edge="1" parent="1" source="nats" target="worker">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_api_nats" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#455A64;strokeWidth=1;dashed=1;" edge="1" parent="1" source="fastapi" target="nats">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ VERTEX AI ============ -->
+        <mxCell id="grp_llm" value="" style="rounded=1;whiteSpace=wrap;dashed=1;dashPattern=5 5;fillColor=#FFF8E1;strokeColor=#F57F17;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="160" width="210" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="ico_gcp" value="" style="shape=image;html=1;aspect=fixed;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20width%3D%2224px%22%20height%3D%2224px%22%3E%3Cpath%20d%3D%22M20%2C13.89A.77.77%2C0%2C0%2C0%2C19%2C13.73l-7%2C5.14v.22a.72.72%2C0%2C1%2C1%2C0%2C1.43v0a.74.74%2C0%2C0%2C0%2C.45-.15l7.41-5.47A.76.76%2C0%2C0%2C0%2C20%2C13.89Z%22%20style%3D%22fill%3A%23669df6%22%2F%3E%3Cpath%20d%3D%22M12%2C20.52a.72.72%2C0%2C0%2C1%2C0-1.43h0v-.22L5%2C13.73a.76.76%2C0%2C0%2C0-1%2C.16.74.74%2C0%2C0%2C0%2C.16%2C1l7.41%2C5.47a.73.73%2C0%2C0%2C0%2C.44.15v0Z%22%20style%3D%22fill%3A%23aecbfa%22%2F%3E%3Cpath%20d%3D%22M12%2C18.34a1.47%2C1.47%2C0%2C1%2C0%2C1.47%2C1.47A1.47%2C1.47%2C0%2C0%2C0%2C12%2C18.34Zm0%2C2.18a.72.72%2C0%2C1%2C1%2C.72-.71A.71.71%2C0%2C0%2C1%2C12%2C20.52Z%22%20style%3D%22fill%3A%234285f4%22%2F%3E%3Cpath%20d%3D%22M6%2C6.11a.76.76%2C0%2C0%2C1-.75-.75V3.48a.76.76%2C0%2C1%2C1%2C1.51%2C0V5.36A.76.76%2C0%2C0%2C1%2C6%2C6.11Z%22%20style%3D%22fill%3A%23aecbfa%22%2F%3E%3Ccircle%20cx%3D%225.98%22%20cy%3D%2212%22%20r%3D%220.76%22%20style%3D%22fill%3A%23aecbfa%22%2F%3E%3Ccircle%20cx%3D%225.98%22%20cy%3D%229.79%22%20r%3D%220.76%22%20style%3D%22fill%3A%23aecbfa%22%2F%3E%3Ccircle%20cx%3D%225.98%22%20cy%3D%227.57%22%20r%3D%220.76%22%20style%3D%22fill%3A%23aecbfa%22%2F%3E%3Cpath%20d%3D%22M18%2C8.31a.76.76%2C0%2C0%2C1-.75-.76V5.67a.75.75%2C0%2C1%2C1%2C1.5%2C0V7.55A.75.75%2C0%2C0%2C1%2C18%2C8.31Z%22%20style%3D%22fill%3A%234285f4%22%2F%3E%3Ccircle%20cx%3D%2218.02%22%20cy%3D%2212.01%22%20r%3D%220.76%22%20style%3D%22fill%3A%234285f4%22%2F%3E%3Ccircle%20cx%3D%2218.02%22%20cy%3D%229.76%22%20r%3D%220.76%22%20style%3D%22fill%3A%234285f4%22%2F%3E%3Ccircle%20cx%3D%2218.02%22%20cy%3D%223.48%22%20r%3D%220.76%22%20style%3D%22fill%3A%234285f4%22%2F%3E%3Cpath%20d%3D%22M12%2C15a.76.76%2C0%2C0%2C1-.75-.75V12.34a.76.76%2C0%2C0%2C1%2C1.51%2C0v1.89A.76.76%2C0%2C0%2C1%2C12%2C15Z%22%20style%3D%22fill%3A%23669df6%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2216.45%22%20r%3D%220.76%22%20style%3D%22fill%3A%23669df6%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2210.14%22%20r%3D%220.76%22%20style%3D%22fill%3A%23669df6%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%227.92%22%20r%3D%220.76%22%20style%3D%22fill%3A%23669df6%22%2F%3E%3Cpath%20d%3D%22M15%2C10.54a.76.76%2C0%2C0%2C1-.75-.75V7.91a.76.76%2C0%2C1%2C1%2C1.51%2C0V9.79A.76.76%2C0%2C0%2C1%2C15%2C10.54Z%22%20style%3D%22fill%3A%234285f4%22%2F%3E%3Ccircle%20cx%3D%2215.01%22%20cy%3D%225.69%22%20r%3D%220.76%22%20style%3D%22fill%3A%234285f4%22%2F%3E%3Ccircle%20cx%3D%2215.01%22%20cy%3D%2214.19%22%20r%3D%220.76%22%20style%3D%22fill%3A%234285f4%22%2F%3E%3Ccircle%20cx%3D%2215.01%22%20cy%3D%2211.97%22%20r%3D%220.76%22%20style%3D%22fill%3A%234285f4%22%2F%3E%3Ccircle%20cx%3D%228.99%22%20cy%3D%2214.19%22%20r%3D%220.76%22%20style%3D%22fill%3A%23aecbfa%22%2F%3E%3Ccircle%20cx%3D%228.99%22%20cy%3D%227.92%22%20r%3D%220.76%22%20style%3D%22fill%3A%23aecbfa%22%2F%3E%3Ccircle%20cx%3D%228.99%22%20cy%3D%225.69%22%20r%3D%220.76%22%20style%3D%22fill%3A%23aecbfa%22%2F%3E%3Cpath%20d%3D%22M9%2C12.73A.76.76%2C0%2C0%2C1%2C8.24%2C12V10.1a.75.75%2C0%2C1%2C1%2C1.5%2C0V12A.75.75%2C0%2C0%2C1%2C9%2C12.73Z%22%20style%3D%22fill%3A%23aecbfa%22%2F%3E%3C%2Fsvg%3E;" vertex="1" parent="1">
+          <mxGeometry x="1105" y="170" width="28" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="lbl_llm" value="&lt;b&gt;Vertex AI&lt;/b&gt; (GCP)" style="text;html=1;align=center;fontSize=13;fontColor=#F57F17;" vertex="1" parent="1">
+          <mxGeometry x="1135" y="173" width="140" height="24" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="gemini" value="&lt;b&gt;Gemini 1.5 Pro&lt;/b&gt;&lt;br&gt;natif" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F57F17;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1115" y="215" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="claude_mg" value="&lt;b&gt;Claude Sonnet&lt;/b&gt;&lt;br&gt;Model Garden" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F57F17;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1115" y="270" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="adc" value="&lt;b&gt;Auth: ADC&lt;/b&gt;&lt;br&gt;Workload Identity" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE082;strokeColor=#F57F17;fontColor=#1a1a2e;fontSize=9;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1115" y="330" width="150" height="35" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e_graph_llm" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F57F17;strokeWidth=2;" edge="1" parent="1" source="plan" target="grp_llm">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ OBSERVABILITY ============ -->
+        <mxCell id="grp_obs" value="" style="rounded=1;whiteSpace=wrap;dashed=1;dashPattern=5 5;fillColor=#FCE4EC;strokeColor=#C62828;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="470" width="210" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="lbl_obs" value="&lt;b&gt;Observabilite LLM&lt;/b&gt;" style="text;html=1;align=center;fontSize=11;fontColor=#C62828;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="478" width="150" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="ico_langfuse" value="" style="shape=image;html=1;aspect=fixed;image=https://raw.githubusercontent.com/langfuse/langfuse/main/web/public/icon.svg;" vertex="1" parent="1">
+          <mxGeometry x="1108" y="510" width="24" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="langfuse" value="&lt;b&gt;Langfuse&lt;/b&gt;&lt;br&gt;Traces, tokens, couts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F48FB1;strokeColor=#C62828;fontColor=#1a1a2e;fontSize=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1135" y="505" width="140" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_graph_obs" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C62828;strokeWidth=1;dashed=1;" edge="1" parent="1" source="grp_orchestrator" target="langfuse">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ MAIN FLOW ============ -->
+        <mxCell id="e_user_front" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#3949AB;strokeWidth=2;" edge="1" parent="1" source="user" target="chainlit">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_front_api" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565C0;strokeWidth=2;" edge="1" parent="1" source="chainlit" target="fastapi">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_api_graph" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2E7D32;strokeWidth=2;" edge="1" parent="1" source="fastapi" target="plan">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- LEGEND -->
+        <mxCell id="legend" value="&lt;b&gt;Legende&lt;/b&gt;&lt;br&gt;Trait plein = hot path (requete temps reel)&lt;br&gt;Trait pointille = cold path (ingestion async)&lt;br&gt;Trait orange = boucle agentique" style="text;html=1;align=left;fontSize=10;fontColor=#555;fillColor=#FAFAFA;strokeColor=#CCC;rounded=1;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="700" width="280" height="70" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+
+
+
+
+
