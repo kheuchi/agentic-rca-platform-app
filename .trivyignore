@@ -2,3 +2,7 @@
 # Re-evaluate when base image is updated
 CVE-2026-24882
 CVE-2026-25210
+# ncurses buffer overflow (libncursesw6, libtinfo6, ncurses-base, ncurses-bin)
+CVE-2025-69720
+# systemd arbitrary code execution via spurious IPC (libsystemd0, libudev1)
+CVE-2026-29111
