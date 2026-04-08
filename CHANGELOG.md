@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/kheuchi/rag-platform-app/compare/v1.4.0...v1.5.0) (2026-04-08)
+
+
+### Features
+
+* Phase 4.6 + 5 — Vertex AI fallback, Langfuse tracing, smoke test RCA step ([b9910ae](https://github.com/kheuchi/rag-platform-app/commit/b9910aee0deb08bed87fb85b60d9448087e80203))
+
 # [1.4.0](https://github.com/kheuchi/rag-platform-app/compare/v1.3.5...v1.4.0) (2026-03-29)
 
 
