@@ -120,6 +120,30 @@ else
 fi
 
 # -----------------------------------------------------------
+# Step 4 — RCA agent query (sync mode)
+# -----------------------------------------------------------
+info "Step 4: Running RCA agent query..."
+RCA_RESP=$(curl -s -X POST "${BASE_URL}/query/rca" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What could cause high latency in the checkout service?",
+    "service": "checkoutservice",
+    "time_range": "1h",
+    "stream": false
+  }' --max-time 120)
+
+ROOT_CAUSE=$(echo "$RCA_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('root_cause','')[:100])" 2>/dev/null || echo "")
+CONFIDENCE=$(echo "$RCA_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('confidence',0))" 2>/dev/null || echo "0")
+
+if [ -n "$ROOT_CAUSE" ] && [ "$ROOT_CAUSE" != "" ]; then
+  ok "RCA agent returned result (confidence: ${CONFIDENCE})"
+  echo "  Root cause: ${ROOT_CAUSE}..."
+else
+  warn "RCA agent returned empty result (may be expected if OTel Demo has no recent data)"
+  echo "  Response: ${RCA_RESP:0:200}"
+fi
+
+# -----------------------------------------------------------
 # Summary
 # -----------------------------------------------------------
 echo ""
@@ -130,4 +154,5 @@ echo ""
 echo "  Job ID:         ${JOB_ID}"
 echo "  Chunks indexed: ${CHUNKS}"
 echo "  Query results:  ${COUNT}"
+echo "  RCA confidence: ${CONFIDENCE}"
 echo ""

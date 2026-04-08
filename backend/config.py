@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     prometheus_url: str = "http://prometheus:9090"
     tempo_url: str = "http://tempo:3200"
 
+    # Langfuse (LLM observability)
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = "http://langfuse.rag-dev.svc.cluster.local:3000"
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 

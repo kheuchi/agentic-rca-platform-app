@@ -35,15 +35,10 @@ async def search_code_vectors(
         service_filter: Optional service name to restrict results (e.g. "checkoutservice").
         top_k: Number of results to return (default 5).
     """
-    from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
+    from llm.embeddings import get_embedding_model
 
-    # Embed the query
-    embed_model = AzureOpenAIEmbedding(
-        azure_endpoint=settings.azure_openai_endpoint,
-        api_key=settings.azure_openai_api_key,
-        azure_deployment=settings.azure_openai_embedding_deployment,
-        api_version="2024-08-01-preview",
-    )
+    # Embed the query (Azure OpenAI primary, Vertex AI fallback)
+    embed_model = get_embedding_model()
     query_embedding = await embed_model.aget_text_embedding(query)
 
     # Firestore vector search
