@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/kheuchi/rag-platform-app/compare/v1.5.0...v1.5.1) (2026-04-08)
+
+
+### Bug Fixes
+
+* trivyignore unfixed Debian CVEs (ncurses CVE-2025-69720, systemd CVE-2026-29111) ([ddc2054](https://github.com/kheuchi/rag-platform-app/commit/ddc2054904f8ac0b6b27c9a7d747b636ea25cc52))
+
 # [1.5.0](https://github.com/kheuchi/rag-platform-app/compare/v1.4.0...v1.5.0) (2026-04-08)
 
 
