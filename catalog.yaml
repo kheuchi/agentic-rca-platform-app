@@ -1,0 +1,185 @@
+# RAG Platform — Centralized Service Catalog
+# Single source of truth for all platform components across 3 repos.
+# Repos: rag-platform-infra, rag-platform-gitops, rag-platform-app
+
+apiVersion: v1
+kind: ServiceCatalog
+metadata:
+  name: rag-platform
+  owner: kheuchi
+  environment: dev
+  cloud: multi-cloud (Azure + GCP)
+
+# ---------------------------------------------------------------------------
+# Infrastructure (rag-platform-infra — Terraform)
+# ---------------------------------------------------------------------------
+infrastructure:
+  cluster:
+    name: aks-rag-dev
+    provider: Azure AKS
+    location: East US
+    kubernetes_version: "1.31"
+    node_pools:
+      - name: system
+        vm_size: Standard_D2s_v3
+        count: 1
+      - name: spot
+        vm_size: Standard_D4s_v3
+        min: 0
+        max: 2
+        priority: Spot
+
+  networking:
+    vnet: vnet-rag-dev
+    subnets: [aks-subnet, private-endpoint-subnet]
+    nsg: nsg-rag-dev
+
+  ai_services:
+    - name: oai-rag-dev
+      provider: Azure OpenAI
+      location: East US
+      deployments:
+        - name: gpt-4o
+          purpose: chat/reasoning
+        - name: text-embedding-3-small
+          purpose: embeddings (1536 dims)
+
+  vector_store:
+    - name: firestore-default
+      provider: GCP Firestore
+      project: mon-rag-perso-2026
+      database: "(default)"
+      collection: code-chunks
+      location: us-central1
+
+  identity:
+    - name: wif-azure-gcp
+      type: Workload Identity Federation
+      description: Azure AD trust for GCP — no static keys
+
+# ---------------------------------------------------------------------------
+# Platform Services (rag-platform-gitops — ArgoCD)
+# ---------------------------------------------------------------------------
+platform:
+  argocd:
+    version: "7.7.5"
+    url: https://13.92.13.5
+
+  nats:
+    chart: nats
+    version: "1.2.6"
+    namespace: nats
+    stream: RAG
+    subjects: [rag.ingest, rag.ingest.repo]
+
+  keda:
+    chart: keda
+    version: "2.16.1"
+    namespace: keda
+    scaler: nats-jetstream (lag threshold 10)
+
+  crossplane:
+    version: "1.18"
+    namespace: crossplane-system
+    managed_resources:
+      - redis-rag-dev (Azure Cache for Redis, Basic C0)
+
+  observability:
+    chart: opentelemetry-demo
+    version: "0.32.8"
+    namespace: otel-demo
+    backends:
+      grafana: true
+      prometheus: true
+      loki: true
+      tempo: true
+    disabled_services: [accountingService, frauddetectionService, kafka, checkoutService, imageprovider]
+
+  langfuse:
+    namespace: rag-dev
+    purpose: LLM call tracing and evaluation
+    status: Phase 5
+
+  kubecost:
+    namespace: kubecost
+    purpose: Kubernetes cost monitoring
+    status: Phase 5
+
+# ---------------------------------------------------------------------------
+# Application Services (rag-platform-app — Python)
+# ---------------------------------------------------------------------------
+application:
+  backend:
+    name: rag-backend
+    namespace: rag-dev
+    image: ghcr.io/kheuchi/rag-backend
+    framework: FastAPI
+    port: 8000
+    replicas: 1
+    routes:
+      - POST /ingest        — single document ingestion via NATS
+      - POST /ingest/repo   — full repo ingestion (cold path)
+      - GET  /ingest/status/{job_id} — job status via Redis
+      - POST /query          — vector search (Firestore)
+      - POST /query/rca      — LangGraph RCA agent (SSE streaming)
+      - GET  /health
+    dependencies:
+      - NATS JetStream (publish ingest jobs)
+      - Redis (job status cache)
+      - GCP Firestore (vector search)
+      - Azure OpenAI (chat LLM + embeddings)
+      - Vertex AI (chat LLM fallback)
+      - Loki, Prometheus, Tempo (hot path observability tools)
+
+  worker:
+    name: rag-worker
+    namespace: rag-dev
+    image: ghcr.io/kheuchi/rag-worker
+    framework: Python asyncio
+    replicas: 0-5 (KEDA autoscaled)
+    pipeline:
+      1_clone: gitpython (depth=1)
+      2_parse: language detection + OTel Demo service mapping
+      3_chunk: llama-index CodeSplitter (tree-sitter) + SentenceSplitter fallback
+      4_embed: Azure OpenAI text-embedding-3-small (batch 16)
+      5_store: GCP Firestore batch upsert
+    dependencies:
+      - NATS JetStream (consume ingest jobs)
+      - Redis (job status updates)
+      - Azure OpenAI (embeddings)
+      - GCP Firestore (vector store)
+
+  rca_agent:
+    name: LangGraph RCA Agent
+    type: embedded (within backend)
+    flow: plan_search -> execute_tools -> correlate_findings -> synthesize_root_cause
+    tools:
+      - search_code_vectors (Firestore)
+      - query_loki_logs (Loki LogQL)
+      - query_prometheus_metrics (Prometheus PromQL)
+      - query_tempo_traces (Tempo TraceQL)
+    max_iterations: 8
+    llm: Azure OpenAI gpt-4o (primary) + Vertex AI gemini-1.5-pro (fallback)
+
+# ---------------------------------------------------------------------------
+# CI/CD & Security
+# ---------------------------------------------------------------------------
+ci_cd:
+  semantic_release: cycjimmy/semantic-release-action@v4
+  sast: CodeQL
+  vulnerability_scan: Trivy (CRITICAL/HIGH gate, local only)
+  signing: Cosign (keyless Sigstore)
+  sbom: SPDX JSON attestation
+  registry: ghcr.io/kheuchi
+
+# ---------------------------------------------------------------------------
+# Secrets (manual — not in git)
+# ---------------------------------------------------------------------------
+secrets:
+  rag-ai-secrets:
+    namespace: rag-dev
+    keys: [azure-openai-endpoint, azure-openai-api-key]
+  rag-backend-secrets:
+    namespace: rag-dev
+    keys: [redis-host, redis-key]
+    source: Crossplane Azure Redis (manual copy or writeConnectionSecretToRef)

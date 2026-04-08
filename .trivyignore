@@ -6,3 +6,5 @@ CVE-2026-25210
 CVE-2025-69720
 # systemd arbitrary code execution via spurious IPC (libsystemd0, libudev1)
 CVE-2026-29111
+# nghttp2 DoS via malformed HTTP/2 frames (libnghttp2-14, worker image)
+CVE-2026-27135
