@@ -7,34 +7,44 @@ This repo contains the **backend API** and **worker** microservices. Infrastruct
 ## Architecture
 
 ```
-                    ┌─────────────┐
-  User request ───> │ rag-backend │ (FastAPI)
-                    │  POST /ingest│
-                    └──────┬──────┘
-                           │ publish rag.ingest
-                    ┌──────▼──────┐
-                    │    NATS     │ (JetStream)
-                    │  Stream: RAG│
-                    └──────┬──────┘
-                           │ consume (durable: rag-worker)
-                    ┌──────▼──────┐
-                    │ rag-worker  │ (Python consumer)
-                    │  chunk →    │
-                    │  embed →    │
-                    │  upsert     │
-                    └──────┬──────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-        Azure AI      Azure Redis   GCP Vertex AI
-        Search        (cache)       (Phase 4)
+                         ┌──────────────────────────────┐
+  User request ─────────>│        rag-backend            │ (FastAPI)
+  POST /ingest/repo      │  /ingest  /query  /query/rca  │
+                         └──────┬───────────┬────────────┘
+                                │           │
+                  publish       │           │  LangGraph RCA Agent
+                  rag.ingest    │           │  (search vectors + Loki
+                                │           │   + Prometheus + Tempo)
+                         ┌──────▼──────┐    │
+                         │    NATS     │    │
+                         │  JetStream  │    │
+                         │  Stream: RAG│    │
+                         └──────┬──────┘    │
+                                │ consume   │
+                         ┌──────▼──────┐    │
+                         │ rag-worker  │    │
+                         │ clone → parse│    │
+                         │ chunk → embed│    │
+                         │ → store      │    │
+                         └──────┬──────┘    │
+                                │           │
+              ┌─────────────────┼───────────┘
+              │                 │
+              ▼                 ▼
+        Azure OpenAI      GCP Firestore        Azure Redis
+        (embeddings +     (vector store,       (job status
+         chat LLM)        collection:           cache)
+                          code-chunks)
 ```
 
 ### Why this design?
 
 - **Event-driven ingestion**: NATS JetStream decouples the API from heavy processing (chunking, embedding, vector upsert). The backend responds instantly while the worker processes asynchronously.
 - **KEDA autoscaling**: The worker scales from 0 to N based on NATS queue depth — no documents = no pods = no cost.
-- **Multi-cloud ready**: The worker can call Azure OpenAI for embeddings AND GCP Vertex AI, writing to both Azure AI Search and GCP vector stores. This enables active-active or failover patterns.
+- **Multi-cloud**: Azure OpenAI for embeddings/LLM, GCP Firestore as vector store, connected via Workload Identity Federation (no static keys).
+- **RAG + RCA agent**: The LangGraph agent combines code vector search with live observability tools (Loki logs, Prometheus metrics, Tempo traces) for root cause analysis.
+- **Why RAG over MCP?** Semantic search across multiple repos at scale (MCP reads files one by one — doesn't scale). Phase 6 will add MCP for live code navigation alongside RAG.
+- **Why Firestore over BigQuery?** Millisecond latency for real-time vector search. BigQuery is an analytics warehouse with multi-second latency, unsuitable for a live API behind an SSE-streaming agent.
 - **Separation of concerns**: This repo is pure application code. Kubernetes manifests live in `rag-platform-gitops` (GitOps). Infrastructure (AKS, VNet, Crossplane) lives in `rag-platform-infra` (Terraform).
 
 ## Repository structure
@@ -42,17 +52,33 @@ This repo contains the **backend API** and **worker** microservices. Infrastruct
 ```
 rag-platform-app/
 ├── backend/                  # FastAPI REST API
-│   ├── main.py               # App entrypoint — /health, /ingest, /query
-│   ├── requirements.txt      # Python dependencies
+│   ├── main.py               # App entrypoint — /health, /ingest, /query, /query/rca
+│   ├── config.py             # Pydantic settings (env vars)
+│   ├── llm/                  # LLM + embedding clients
+│   │   ├── embeddings.py     # Azure OpenAI / Vertex AI embeddings
+│   │   └── chat.py           # Chat LLM (gpt-4o + gemini fallback)
+│   ├── agent/                # LangGraph RCA agent
+│   │   ├── graph.py          # Agent flow: plan → search → correlate → synthesize
+│   │   └── tools/            # Agent tools (code_search, loki, prometheus, tempo)
+│   ├── requirements.txt
 │   └── Dockerfile
 ├── worker/                   # NATS JetStream consumer
 │   ├── main.py               # Consumer loop — subscribe, process, ack
+│   ├── config.py             # Worker settings
+│   ├── pipeline/             # Ingestion pipeline
+│   │   ├── chunk.py          # CodeSplitter (tree-sitter) + SentenceSplitter
+│   │   ├── embed.py          # Azure OpenAI text-embedding-3-small (batch 16)
+│   │   └── store.py          # GCP Firestore batch upsert
 │   ├── requirements.txt
 │   └── Dockerfile
+├── scripts/
+│   └── smoke-test.sh         # e2e smoke test script
+├── catalog.yaml              # Centralized service catalog (CMDB)
+├── CONTEXT.md                # Project context (synced across 3 repos)
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml            # PR checks: lint + Docker build (no push)
-│       └── release.yml       # Main: semantic-release → build + push to ghcr.io
+│       ├── ci.yml            # PR checks: lint + Docker build + Trivy + CodeQL
+│       └── release.yml       # Main: semantic-release → build + push + sign + SBOM
 ├── .releaserc.json           # semantic-release config
 ├── package.json              # Node deps for semantic-release
 └── CHANGELOG.md              # Auto-generated by semantic-release
@@ -112,6 +138,9 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) w
 ## Roadmap
 
 - [x] Phase 3: Backend + Worker scaffolding, NATS integration
-- [ ] Phase 4: Azure AI Search + OpenAI embeddings, GCP Vertex AI
+- [x] Phase 4.1-4.4: FastAPI backend, LangGraph RCA agent, worker pipeline
+- [x] Phase 4.5c: Swap Azure AI Search → GCP Firestore vector store
+- [ ] Phase 4.5d: e2e smoke test (in progress — see CONTEXT.md for blockers)
+- [ ] Phase 4.6: Multi-cloud validation (Vertex AI LLM fallback)
 - [ ] Phase 5: Observability (Langfuse tracing, Kubecost)
-- [ ] Phase 6: Production hardening (RBAC, Network Policies, mTLS)
+- [ ] Phase 6: Hybrid RAG + MCP (live code navigation via MCP servers)

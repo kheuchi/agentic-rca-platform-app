@@ -3,7 +3,7 @@
 > Ce fichier est la source de vérité du projet. Mis à jour à chaque fin de phase.
 > Il est dupliqué sur les 3 repos. Quand tu ouvres une nouvelle session Claude, dis-lui de lire ce fichier.
 
-## Dernière mise à jour : 2026-03-30
+## Dernière mise à jour : 2026-04-09
 
 ## Architecture globale
 
@@ -67,6 +67,7 @@ TEMPO_URL=http://otel-demo-tempo.otel-demo.svc.cluster.local:3200
 | **4.5d — e2e smoke test** | **app** | **⏳ En cours** |
 | 4.6 — Multi-cloud validation (Vertex AI fallback) | app | ⬜ Pending |
 | 5 — Langfuse + Kubecost | tous | ⬜ Pending |
+| 6 — RAG + MCP hybride (navigation code live) | app | ⬜ Planned |
 
 ## Phase 4.5d — Blockers identifiés (2026-03-30)
 
@@ -80,6 +81,19 @@ Le pipeline worker fonctionne (clone → parse → chunk → embed) mais 3 block
    - **Fix** : dans le repo gitops, vérifier l'envFrom du worker deployment.
 
 3. **Azure OpenAI rate limiting (429)** — le tier S0 rate-limit les embeddings (264 chunks). Le worker retry en boucle (60s backoff). Pas bloquant mais ralentit le test.
+
+## Décisions d'architecture
+
+### Pourquoi RAG plutôt que MCP seul
+
+Le choix du RAG (et non MCP pur) repose sur :
+
+- **Recherche sémantique cross-repo** : avec N repos, un agent MCP ne peut pas ouvrir chaque fichier — le RAG pré-indexe et retrouve par intention ("gestion d'erreur checkout") en ~100ms.
+- **Confluence / docs non structurées** : un index vectoriel est nécessaire pour 1000+ pages. MCP lit page par page, trop lent.
+- **Coût token maîtrisé** : le RAG retourne 5-10 chunks, pas 50 fichiers entiers.
+- **Portfolio** : démontre un pipeline data complet (ingestion async, event-driven, autoscaling, multi-cloud).
+
+**Phase 6 prévue : hybride RAG + MCP** — RAG pour la découverte sémantique, MCP pour la navigation directe (lecture fichiers, arborescence, git blame, doc Confluence). L'agent RCA utilisera les deux.
 
 ## Comptes
 
