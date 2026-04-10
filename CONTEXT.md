@@ -69,18 +69,41 @@ TEMPO_URL=http://otel-demo-tempo.otel-demo.svc.cluster.local:3200
 | 5 — Langfuse + Kubecost | tous | ⬜ Pending |
 | 6 — RAG + MCP hybride (navigation code live) | app | ⬜ Planned |
 
-## Phase 4.5d — Blockers identifiés (2026-03-30)
+## Phase 4.5d — Smoke test progress (2026-04-10)
 
-Le code app (store.py, code_search.py) est OK et les images Docker build/push OK (CI verte).
-Le pipeline worker fonctionne (clone → parse → chunk → embed) mais 3 blockers empêchent le smoke test complet :
+### Blockers résolus
 
-1. **KEDA ScaledObject en erreur** — le trigger NATS JetStream ne peut pas contacter `nats-helm:8222` (monitoring endpoint). KEDA force le worker à 0 replicas en boucle. Le ScaledObject est dans `tenants/rag-dev/` du repo gitops. ArgoCD `selfHeal: true` restaure le scaler même si on le supprime manuellement.
-   - **Fix** : dans le repo gitops, soit activer le port 8222 dans la config NATS Helm, soit changer `minReplicaCount: 0 → 1` dans le ScaledObject, soit corriger le trigger NATS.
+1. **✅ KEDA ScaledObject** — fixé : `minReplicaCount: 0 → 1` + `service.ports.monitor.enabled: true` dans nats-app.yaml (syntaxe native chart NATS v1.2.6 au lieu de `service.merge`). Le port 8222 est maintenant exposé sur le service `nats-helm`.
 
-2. **Redis non accessible par le worker** — le worker log `Redis not available for status tracking: [Errno 111] Connect call failed ('localhost', 6380)`. Les env vars `REDIS_HOST`/`REDIS_KEY` du secret `rag-backend-secrets` ne semblent pas injectées dans le worker deployment.
-   - **Fix** : dans le repo gitops, vérifier l'envFrom du worker deployment.
+2. **✅ Worker scheduling** — le noeud system (D2s_v3, 2 vCPU) était saturé (50 pods, 105% CPU, disk pressure). Résolu par :
+   - Retrait de la toleration spot du worker (le spot pool autoscaler refusait de provisionner)
+   - Réduction resources worker (50m/256Mi au lieu de 100m/512Mi)
+   - Langfuse mis à replicas=0 (Phase 5, CrashLoopBackOff car nécessite PostgreSQL)
+   - 8 services OTel Demo non essentiels désactivés (adService, emailService, etc.) → CPU passé de 105% à 49%
 
-3. **Azure OpenAI rate limiting (429)** — le tier S0 rate-limit les embeddings (264 chunks). Le worker retry en boucle (60s backoff). Pas bloquant mais ralentit le test.
+3. **✅ GCP credentials** — le backend et le worker n'avaient pas de credentials GCP pour Firestore. Résolu temporairement par :
+   - Création SA GCP `rag-app@mon-rag-perso-2026.iam.gserviceaccount.com` avec rôle `datastore.user`
+   - Secret K8s `gcp-credentials` avec clé JSON, monté en volume dans les deux deployments
+   - `GOOGLE_APPLICATION_CREDENTIALS=/var/secrets/gcp/key.json`
+   - **TODO Phase future** : remplacer par Workload Identity Federation complète (Azure AD → AKS pod identity → GCP)
+
+### Blockers restants
+
+4. **⏳ Redis** — non-critique. Le secret `redis-rag-dev-conn` dépend de Crossplane Azure Redis (Basic C0). Le worker fonctionne sans Redis (status tracking dégradé, `optional: true`).
+
+5. **⏳ Azure OpenAI rate limiting (429)** — le tier S0 rate-limit les embeddings. Pattern observé : 2 batches de 16 chunks passent (~32 chunks), puis 429 avec retry 60s. Pour 264 chunks → ~8-10 min total. Non bloquant mais lent.
+
+### État actuel du pipeline
+
+- Worker **Running** : connecté à NATS, subscribed à `rag.ingest` et `rag.ingest.repo`
+- Pipeline confirmé fonctionnel : clone → parse (10 fichiers) → chunk (264 nodes) → embed (Azure OpenAI) → en cours
+- Backend **Running** : `/health` OK, GCP credentials montées
+
+### Prochaine étape
+
+- Relancer le smoke test complet (`scripts/smoke-test.sh`) une fois l'embedding terminé
+- Tester `/query` (Firestore vector search) et `/query/rca` (LangGraph RCA agent)
+- Si OK → Phase 4.5d Done, passer à Phase 4.6 (Vertex AI fallback)
 
 ## Décisions d'architecture
 
