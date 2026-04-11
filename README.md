@@ -6,7 +6,19 @@ This repo contains the **backend API** and **worker** microservices. Infrastruct
 
 ## Architecture
 
-A clearer runtime diagram is available in [docs/ARCHITECTURE.md](/C:/Users/cheik/OneDrive/Old%20OneDrive/Documents/code/mon-rag-multicloud/rag-platform-app/docs/ARCHITECTURE.md).
+A clearer runtime diagram is available in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+### Flux détaillé — de la requête à la réponse
+
+La documentation technique du flux complet est découpée en 5 étapes :
+
+| Étape | Description | Doc |
+|-------|-------------|-----|
+| 1 | Réception de la requête (FastAPI, routing, config) | [docs/01-request-entry.md](docs/01-request-entry.md) |
+| 2 | Publication dans NATS JetStream (`/ingest/repo`) | [docs/02-nats-publish.md](docs/02-nats-publish.md) |
+| 3 | Pipeline worker — clone → parse → chunk → embed → store | [docs/03-worker-pipeline.md](docs/03-worker-pipeline.md) |
+| 4 | Query vectorielle simple (`/query` → Firestore) | [docs/04-query-vector.md](docs/04-query-vector.md) |
+| 5 | Agent RCA LangGraph (`/query/rca` → SSE streaming) | [docs/05-rca-agent.md](docs/05-rca-agent.md) |
 
 ```mermaid
 flowchart LR
