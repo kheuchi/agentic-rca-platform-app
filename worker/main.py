@@ -5,6 +5,7 @@ import shutil
 import signal
 import asyncio
 import logging
+from contextlib import suppress
 
 import nats
 import redis.asyncio as redis
@@ -20,6 +21,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 shutdown_event = asyncio.Event()
+SUBSCRIBE_RETRY_DELAY_SECONDS = 5
 
 
 def handle_signal():
@@ -77,6 +79,7 @@ async def process_message(msg):
 async def process_repo_ingest(msg, redis_client):
     """Process a full repo ingestion (cold path pipeline)."""
     repo_dir = None
+    data = {}
     try:
         data = json.loads(msg.data.decode())
         job_id = data.get("job_id", "unknown")
@@ -104,7 +107,7 @@ async def process_repo_ingest(msg, redis_client):
         nodes = await embed_chunks(nodes)
         await update_job_status(redis_client, job_id, status="storing", progress=0.8)
 
-        # Step 5: Store in Azure AI Search
+        # Step 5: Store in Firestore
         chunks_indexed = store_chunks(nodes)
         await update_job_status(
             redis_client, job_id,
@@ -128,6 +131,31 @@ async def process_repo_ingest(msg, redis_client):
             shutil.rmtree(repo_dir, ignore_errors=True)
 
 
+async def subscribe_with_retry(js, subject: str, durable: str):
+    """Retry JetStream durable binding until the old subscription is released."""
+    while not shutdown_event.is_set():
+        try:
+            sub = await js.subscribe(
+                subject,
+                durable=durable,
+                manual_ack=True,
+            )
+            logger.info("Subscribed to %s (durable=%s)", subject, durable)
+            return sub
+        except nats.js.errors.Error as e:
+            if "already bound to a subscription" not in str(e):
+                raise
+
+            logger.warning(
+                "Consumer durable=%s is still bound to a previous subscription, retrying in %ss",
+                durable,
+                SUBSCRIBE_RETRY_DELAY_SECONDS,
+            )
+            await asyncio.sleep(SUBSCRIBE_RETRY_DELAY_SECONDS)
+
+    raise asyncio.CancelledError(f"Shutdown requested before subscribing to {subject}")
+
+
 async def main():
     loop = asyncio.get_event_loop()
     for sig in (signal.SIGTERM, signal.SIGINT):
@@ -140,20 +168,18 @@ async def main():
     logger.info("Connected to NATS at %s", settings.nats_url)
 
     # Subscription 1: single document ingestion (backward compat)
-    sub_doc = await js.subscribe(
+    sub_doc = await subscribe_with_retry(
+        js,
         settings.nats_subject,
         durable="rag-worker",
-        manual_ack=True,
     )
-    logger.info("Subscribed to %s (durable=rag-worker)", settings.nats_subject)
 
     # Subscription 2: repo ingestion (cold path)
-    sub_repo = await js.subscribe(
+    sub_repo = await subscribe_with_retry(
+        js,
         settings.nats_subject_repo,
         durable="rag-worker-repo",
-        manual_ack=True,
     )
-    logger.info("Subscribed to %s (durable=rag-worker-repo)", settings.nats_subject_repo)
 
     logger.info("Worker ready — waiting for messages")
 
@@ -184,11 +210,13 @@ async def main():
             continue
 
     logger.info("Shutting down...")
-    await sub_doc.unsubscribe()
-    await sub_repo.unsubscribe()
+    with suppress(Exception):
+        await sub_doc.unsubscribe()
+    with suppress(Exception):
+        await sub_repo.unsubscribe()
     if redis_client:
         await redis_client.close()
-    await nc.close()
+    await nc.drain()
 
 
 if __name__ == "__main__":

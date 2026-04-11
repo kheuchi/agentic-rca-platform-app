@@ -1,6 +1,7 @@
 """Embedding step — Azure OpenAI (primary) + Vertex AI (fallback)."""
 
 import logging
+from typing import Sequence
 
 from llama_index.core.schema import TextNode
 
@@ -9,6 +10,19 @@ from config import settings
 logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 16
+
+
+class VertexEmbeddingAdapter:
+    """Expose the async embedding methods used by the worker pipeline."""
+
+    def __init__(self, model):
+        self._model = model
+
+    async def aget_text_embedding(self, text: str) -> list[float]:
+        return await self._model.aembed_query(text)
+
+    async def aget_text_embedding_batch(self, texts: Sequence[str]) -> list[list[float]]:
+        return await self._model.aembed_documents(list(texts))
 
 
 def get_embedding_model():
@@ -28,10 +42,12 @@ def get_embedding_model():
     logger.info("Azure OpenAI not configured, falling back to Vertex AI embeddings")
     from langchain_google_vertexai import VertexAIEmbeddings
 
-    return VertexAIEmbeddings(
-        model_name="text-embedding-004",
-        project=settings.gcp_project_id,
-        location=settings.gcp_location,
+    return VertexEmbeddingAdapter(
+        VertexAIEmbeddings(
+            model_name="text-embedding-004",
+            project=settings.gcp_project_id,
+            location=settings.gcp_location,
+        )
     )
 
 

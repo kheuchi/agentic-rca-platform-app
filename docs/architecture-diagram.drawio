@@ -1,0 +1,156 @@
+<mxfile host="app.diagrams.net" modified="2026-04-11T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="rag-platform-app-architecture" name="Architecture">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="legend_title" value="Legend" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_https" value="HTTPS / REST" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="40" y="70" width="120" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_grpc" value="gRPC / Google SDK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="175" y="70" width="150" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_nats" value="NATS / TCP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="340" y="70" width="110" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_redis" value="Redis protocol" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="465" y="70" width="120" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_http_obs" value="HTTP observability APIs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="600" y="70" width="170" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="user_icon" value="U" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="40" y="170" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="user" value="User / UI / API client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="95" y="156" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="backend_icon" value="API" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="290" y="150" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="backend" value="rag-backend&#xa;FastAPI&#xa;/ingest /query /query/rca" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="345" y="136" width="220" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="nats_icon" value="N" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="590" y="160" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="nats" value="NATS JetStream&#xa;subjects: rag.ingest, rag.ingest.repo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="645" y="151" width="220" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="worker_icon" value="W" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="890" y="150" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="worker" value="rag-worker&#xa;clone -&gt; parse -&gt; chunk&#xa;-&gt; embed -&gt; store" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="945" y="136" width="220" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="aoai_embed_icon" value="AOAI" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="60" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="aoai_embed" value="Azure OpenAI&#xa;text-embedding-3-small" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1255" y="55" width="220" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="aoai_llm_icon" value="AOAI" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="180" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="aoai_llm" value="Azure OpenAI&#xa;gpt-4o" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1255" y="175" width="220" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="vertex_icon" value="GCP" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="300" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="vertex" value="Vertex AI&#xa;fallback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1255" y="295" width="220" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="firestore_icon" value="FS" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="430" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="firestore" value="Firestore&#xa;collection: code-chunks&#xa;vector store" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4e1f5;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1255" y="420" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="redis_icon" value="R" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="890" y="330" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="redis" value="Azure Redis&#xa;job status cache" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="945" y="316" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_icon" value="AI" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="590" y="410" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent" value="LangGraph RCA Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="645" y="396" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="loki_icon" value="L" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="890" y="430" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="loki" value="Loki" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="935" y="418" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="prom_icon" value="P" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="430" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="prom" value="Prometheus" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1085" y="418" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="tempo_icon" value="T" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="890" y="510" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="tempo" value="Tempo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="935" y="498" width="120" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" value="POST /ingest/repo&#xa;POST /query&#xa;POST /query/rca" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d79b00;fontColor=#7f6000;" edge="1" parent="1" source="user" target="backend">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="publish ingest job" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#b85450;fontColor=#7f1d1d;" edge="1" parent="1" source="backend" target="nats">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="consume job" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#b85450;fontColor=#7f1d1d;" edge="1" parent="1" source="nats" target="worker">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="embedding requests&#xa;HTTPS REST API" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d79b00;fontColor=#7f6000;" edge="1" parent="1" source="worker" target="aoai_embed">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="fallback embeddings" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#d79b00;fontColor=#7f6000;" edge="1" parent="1" source="worker" target="vertex">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="store vectors + metadata&#xa;Firestore client / gRPC" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#6c8ebf;fontColor=#254f7a;" edge="1" parent="1" source="worker" target="firestore">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="best-effort status" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#666666;fontColor=#333333;" edge="1" parent="1" source="worker" target="redis">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="status lookup" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#666666;fontColor=#333333;" edge="1" parent="1" source="backend" target="redis">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" value="vector search&#xa;Firestore client / gRPC" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#6c8ebf;fontColor=#254f7a;" edge="1" parent="1" source="backend" target="firestore">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" value="invoke RCA flow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d79b00;fontColor=#7f6000;" edge="1" parent="1" source="backend" target="agent">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" value="LLM reasoning&#xa;HTTPS REST API" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d79b00;fontColor=#7f6000;" edge="1" parent="1" source="agent" target="aoai_llm">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e12" value="LLM fallback" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#d79b00;fontColor=#7f6000;" edge="1" parent="1" source="agent" target="vertex">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e13" value="search code vectors" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#6c8ebf;fontColor=#254f7a;" edge="1" parent="1" source="agent" target="firestore">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e14" value="query logs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#82b366;fontColor=#3b5f2a;" edge="1" parent="1" source="agent" target="loki">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e15" value="query metrics" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#82b366;fontColor=#3b5f2a;" edge="1" parent="1" source="agent" target="prom">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e16" value="query traces" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#82b366;fontColor=#3b5f2a;" edge="1" parent="1" source="agent" target="tempo">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

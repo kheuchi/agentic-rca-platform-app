@@ -51,6 +51,9 @@ infrastructure:
       database: "(default)"
       collection: code-chunks
       location: us-central1
+      indexes:
+        - embedding vector index (1536 dims)
+        - service_name + __name__ + embedding composite vector index
 
   identity:
     - name: wif-azure-gcp

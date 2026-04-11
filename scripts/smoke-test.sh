@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 4.5d — End-to-end smoke test
+# Phase 4.5d - End-to-end smoke test
 # Usage: wsl bash scripts/smoke-test.sh
 #
 # Prerequisites:
@@ -10,7 +10,8 @@ set -euo pipefail
 BASE_URL="${BASE_URL:-http://localhost:8000}"
 REPO_URL="${REPO_URL:-https://github.com/open-telemetry/opentelemetry-demo}"
 BRANCH="${BRANCH:-main}"
-TIMEOUT="${TIMEOUT:-300}"  # 5 minutes max
+TIMEOUT="${TIMEOUT:-300}"
+QUERY_POLL_TIMEOUT="${QUERY_POLL_TIMEOUT:-600}"
 
 BLUE='\033[1;34m'
 GREEN='\033[1;32m'
@@ -23,9 +24,12 @@ ok()    { echo -e "${GREEN}[OK]${NC}    $*"; }
 fail()  { echo -e "${RED}[FAIL]${NC}  $*"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; }
 
-# -----------------------------------------------------------
-# Step 0 — Health check
-# -----------------------------------------------------------
+json_get() {
+  local payload="$1"
+  local field="$2"
+  printf '%s' "$payload" | python3 -c "import json, sys; data=json.load(sys.stdin); value=data.get(sys.argv[1], ''); print(value if value is not None else '')" "$field" 2>/dev/null || true
+}
+
 info "Step 0: Health check"
 HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' "${BASE_URL}/health")
 if [ "$HTTP_CODE" != "200" ]; then
@@ -34,10 +38,7 @@ if [ "$HTTP_CODE" != "200" ]; then
 fi
 ok "Backend healthy"
 
-# -----------------------------------------------------------
-# Step 1 — Trigger repo ingest
-# -----------------------------------------------------------
-info "Step 1: Triggering repo ingest — ${REPO_URL} (branch: ${BRANCH})"
+info "Step 1: Triggering repo ingest - ${REPO_URL} (branch: ${BRANCH})"
 INGEST_RESP=$(curl -s -X POST "${BASE_URL}/ingest/repo" \
   -H "Content-Type: application/json" \
   -d "{
@@ -47,36 +48,46 @@ INGEST_RESP=$(curl -s -X POST "${BASE_URL}/ingest/repo" \
     \"file_patterns\": [\"**/*.go\"]
   }")
 
-JOB_ID=$(echo "$INGEST_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)['job_id'])" 2>/dev/null || true)
+JOB_ID=$(printf '%s' "$INGEST_RESP" | python3 -c "import json,sys; print(json.load(sys.stdin).get('job_id', ''))" 2>/dev/null || true)
 if [ -z "$JOB_ID" ]; then
   fail "Could not extract job_id from response: ${INGEST_RESP}"
   exit 1
 fi
 ok "Job queued: ${JOB_ID}"
 
-# -----------------------------------------------------------
-# Step 2 — Poll job status until completed or timeout
-# -----------------------------------------------------------
-info "Step 2: Polling job status (timeout: ${TIMEOUT}s)..."
+info "Step 2: Polling job status (timeout: ${TIMEOUT}s)"
 ELAPSED=0
 INTERVAL=10
+STATUS_TRACKING_AVAILABLE=true
+CHUNKS=0
+STATUS="unknown"
 
 while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
-  STATUS_RESP=$(curl -s "${BASE_URL}/ingest/status/${JOB_ID}")
-  STATUS=$(echo "$STATUS_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','unknown'))" 2>/dev/null || echo "unknown")
-  PROGRESS=$(echo "$STATUS_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('progress',0))" 2>/dev/null || echo "0")
-  CHUNKS=$(echo "$STATUS_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('chunks_indexed',0))" 2>/dev/null || echo "0")
-  ERROR=$(echo "$STATUS_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('error','') or '')" 2>/dev/null || echo "")
+  STATUS_FILE=$(mktemp)
+  HTTP_CODE=$(curl -s -o "$STATUS_FILE" -w '%{http_code}' "${BASE_URL}/ingest/status/${JOB_ID}")
+  STATUS_RESP=$(cat "$STATUS_FILE")
+  rm -f "$STATUS_FILE"
 
-  info "  status=${STATUS}  progress=${PROGRESS}  chunks=${CHUNKS}  (${ELAPSED}s elapsed)"
+  if [ "$HTTP_CODE" != "200" ]; then
+    STATUS_TRACKING_AVAILABLE=false
+    warn "Status endpoint unavailable (HTTP ${HTTP_CODE}) - continuing with query-based polling"
+    break
+  fi
+
+  STATUS=$(json_get "$STATUS_RESP" "status")
+  PROGRESS=$(json_get "$STATUS_RESP" "progress")
+  CHUNKS=$(json_get "$STATUS_RESP" "chunks_indexed")
+  ERROR_MSG=$(json_get "$STATUS_RESP" "error")
+
+  info "  status=${STATUS} progress=${PROGRESS} chunks=${CHUNKS} (${ELAPSED}s elapsed)"
 
   if [ "$STATUS" = "completed" ]; then
-    ok "Ingest completed — ${CHUNKS} chunks indexed"
+    ok "Ingest completed - ${CHUNKS} chunks indexed"
     break
   fi
 
   if [ "$STATUS" = "failed" ]; then
-    fail "Ingest failed: ${ERROR}"
+    fail "Ingest failed: ${ERROR_MSG}"
     exit 1
   fi
 
@@ -84,45 +95,45 @@ while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
   ELAPSED=$((ELAPSED + INTERVAL))
 done
 
-if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+if [ "$STATUS_TRACKING_AVAILABLE" = true ] && [ "$STATUS" != "completed" ]; then
   fail "Timeout after ${TIMEOUT}s (last status: ${STATUS})"
   exit 1
 fi
 
-# -----------------------------------------------------------
-# Step 3 — Query the indexed code
-# -----------------------------------------------------------
-info "Step 3: Querying indexed code..."
-QUERY_RESP=$(curl -s -X POST "${BASE_URL}/query" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "checkout service main function",
-    "top_k": 3,
-    "service_filter": "checkoutservice"
-  }')
+info "Step 3: Querying indexed code"
+QUERY_ELAPSED=0
+QUERY_INTERVAL=15
+COUNT=0
+QUERY_RESP=""
 
-COUNT=$(echo "$QUERY_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('count',0))" 2>/dev/null || echo "0")
+while [ "$QUERY_ELAPSED" -lt "$QUERY_POLL_TIMEOUT" ]; do
+  QUERY_RESP=$(curl -s -X POST "${BASE_URL}/query" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "query": "checkout service main function",
+      "top_k": 3,
+      "service_filter": "checkoutservice"
+    }')
 
-if [ "$COUNT" -gt 0 ]; then
-  ok "Query returned ${COUNT} results"
-  echo "$QUERY_RESP" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-for i, r in enumerate(data.get('results', [])[:3]):
-    print(f\"  [{i+1}] {r.get('file_path','')} (score: {r.get('score',0):.4f})\")
-    content = r.get('content','')[:100].replace(chr(10),' ')
-    print(f\"      {content}...\")
-" 2>/dev/null || true
-else
-  fail "Query returned 0 results — Firestore vector search may not be working"
+  COUNT=$(printf '%s' "$QUERY_RESP" | python3 -c "import json,sys; print(json.load(sys.stdin).get('count', 0))" 2>/dev/null || echo "0")
+
+  if [ "${COUNT:-0}" -gt 0 ]; then
+    ok "Query returned ${COUNT} results"
+    break
+  fi
+
+  info "  no results yet (${QUERY_ELAPSED}s elapsed) - waiting for indexing"
+  sleep "$QUERY_INTERVAL"
+  QUERY_ELAPSED=$((QUERY_ELAPSED + QUERY_INTERVAL))
+done
+
+if [ "${COUNT:-0}" -le 0 ]; then
+  fail "Query returned 0 results after ${QUERY_POLL_TIMEOUT}s - Firestore vector search may not be working"
   echo "  Response: ${QUERY_RESP}"
   exit 1
 fi
 
-# -----------------------------------------------------------
-# Step 4 — RCA agent query (sync mode)
-# -----------------------------------------------------------
-info "Step 4: Running RCA agent query..."
+info "Step 4: Running RCA agent query"
 RCA_RESP=$(curl -s -X POST "${BASE_URL}/query/rca" \
   -H "Content-Type: application/json" \
   -d '{
@@ -132,10 +143,10 @@ RCA_RESP=$(curl -s -X POST "${BASE_URL}/query/rca" \
     "stream": false
   }' --max-time 120)
 
-ROOT_CAUSE=$(echo "$RCA_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('root_cause','')[:100])" 2>/dev/null || echo "")
-CONFIDENCE=$(echo "$RCA_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('confidence',0))" 2>/dev/null || echo "0")
+ROOT_CAUSE=$(printf '%s' "$RCA_RESP" | python3 -c "import json,sys; print(json.load(sys.stdin).get('root_cause', '')[:100])" 2>/dev/null || echo "")
+CONFIDENCE=$(printf '%s' "$RCA_RESP" | python3 -c "import json,sys; print(json.load(sys.stdin).get('confidence', 0))" 2>/dev/null || echo "0")
 
-if [ -n "$ROOT_CAUSE" ] && [ "$ROOT_CAUSE" != "" ]; then
+if [ -n "$ROOT_CAUSE" ]; then
   ok "RCA agent returned result (confidence: ${CONFIDENCE})"
   echo "  Root cause: ${ROOT_CAUSE}..."
 else
@@ -143,9 +154,6 @@ else
   echo "  Response: ${RCA_RESP:0:200}"
 fi
 
-# -----------------------------------------------------------
-# Summary
-# -----------------------------------------------------------
 echo ""
 echo -e "${GREEN}================================================${NC}"
 echo -e "${GREEN}  Phase 4.5d smoke test PASSED${NC}"

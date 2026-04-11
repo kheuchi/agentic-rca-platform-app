@@ -3,7 +3,7 @@
 > Ce fichier est la source de vérité du projet. Mis à jour à chaque fin de phase.
 > Il est dupliqué sur les 3 repos. Quand tu ouvres une nouvelle session Claude, dis-lui de lire ce fichier.
 
-## Dernière mise à jour : 2026-04-09
+## Dernière mise à jour : 2026-04-11
 
 ## Architecture globale
 
@@ -22,7 +22,7 @@ rag-platform-app     → Code : FastAPI backend + NATS worker (Python)
 | KEDA | keda-system | Running |
 | Crossplane | crossplane-system | Running |
 | rag-backend | rag-dev | Running — 1/1 |
-| rag-worker | rag-dev | 0 replicas (scale via KEDA) |
+| rag-worker | rag-dev | Running, mais instable au restart (JetStream durable binding) |
 | OTel Demo | otel-demo | Running — Grafana + Prometheus + OTel Collector |
 | Redis | Azure (Crossplane) | Basic C0 |
 
@@ -69,7 +69,7 @@ TEMPO_URL=http://otel-demo-tempo.otel-demo.svc.cluster.local:3200
 | 5 — Langfuse + Kubecost | tous | ⬜ Pending |
 | 6 — RAG + MCP hybride (navigation code live) | app | ⬜ Planned |
 
-## Phase 4.5d — Smoke test progress (2026-04-10)
+## Phase 4.5d — Smoke test progress (2026-04-11)
 
 ### Blockers résolus
 
@@ -87,23 +87,53 @@ TEMPO_URL=http://otel-demo-tempo.otel-demo.svc.cluster.local:3200
    - `GOOGLE_APPLICATION_CREDENTIALS=/var/secrets/gcp/key.json`
    - **TODO Phase future** : remplacer par Workload Identity Federation complète (Azure AD → AKS pod identity → GCP)
 
+4. **✅ Firestore vector indexes** — le backend échouait sur `/query` avec `Missing vector index configuration`. Résolu par création des index Firestore sur `code-chunks` :
+   - index vectoriel `embedding` (1536 dims)
+   - index composite `service_name + __name__ + embedding`
+   - État vérifié via API Firestore Admin : **READY**
+
 ### Blockers restants
 
-4. **⏳ Redis** — non-critique. Le secret `redis-rag-dev-conn` dépend de Crossplane Azure Redis (Basic C0). Le worker fonctionne sans Redis (status tracking dégradé, `optional: true`).
+5. **⏳ Redis** — non-critique. Le secret `redis-rag-dev-conn` dépend de Crossplane Azure Redis (Basic C0). Le worker fonctionne sans Redis (status tracking dégradé, `optional: true`).
 
-5. **⏳ Azure OpenAI rate limiting (429)** — le tier S0 rate-limit les embeddings. Pattern observé : 2 batches de 16 chunks passent (~32 chunks), puis 429 avec retry 60s. Pour 264 chunks → ~8-10 min total. Non bloquant mais lent.
+6. **⏳ Azure OpenAI rate limiting (429)** — le tier S0 rate-limit les embeddings. Pattern observé : 2 à 4 batches de 16 chunks passent, puis 429 avec retry 11-60s. Pour 264 chunks → indexation très lente. Non bloquant fonctionnellement, mais gênant pour le smoke test e2e.
+
+7. **⏳ Worker JetStream restart bug** — le worker peut redémarrer puis échouer avec :
+   - `nats: JetStream.Error consumer is already bound to a subscription`
+   - Cause probable : durable consumers `rag-worker` et `rag-worker-repo` encore liés à une ancienne subscription au moment du restart
+   - Correctif préparé dans `worker/main.py` (retry sur bind + shutdown plus propre), **mais pas encore validé en cluster**
+
+8. **⏳ Corpus smoke test trop large pour S0** — le smoke test actuel sur `checkoutservice` + `**/*.go` produit encore ~10 fichiers / 264 chunks, trop coûteux pour un run rapide. Décision prise : passer à un **mini corpus ciblé** pour valider RAG + RCA avant d'élargir.
 
 ### État actuel du pipeline
 
-- Worker **Running** : connecté à NATS, subscribed à `rag.ingest` et `rag.ingest.repo`
-- Pipeline confirmé fonctionnel : clone → parse (10 fichiers) → chunk (264 nodes) → embed (Azure OpenAI) → en cours
-- Backend **Running** : `/health` OK, GCP credentials montées
+- Backend **Running** : `/health` OK, Firestore accessible, `/query` et `/query/rca` répondent
+- `/query` ne retourne encore souvent **0 résultat** car l'ingestion n'atteint pas toujours `store complete`
+- `/query/rca` répond, mais sans contexte code fiable tant que le corpus n'est pas réellement stocké dans Firestore
+- Pipeline confirmé partiellement fonctionnel : clone → parse → chunk → embed OK ; **stabilité insuffisante** sur la fin de pipeline à cause des 429 + restart worker
+
+### Tests manuels réalisés
+
+- Vérification cluster WSL : contexte `aks-rag-dev` OK, `rag-backend` et `rag-worker` accessibles
+- Firestore project confirmé : `mon-rag-perso-2026`
+- Firestore indexes créés et vérifiés `READY`
+- Test manuel `/query` : **HTTP 200**, mais `{"results":[],"count":0}`
+- Test manuel `/query/rca` : **HTTP 200**, réponse générée par l'agent, mais peu fiable tant que `search_code_vectors` retourne 0 résultat
+
+### Décisions prises
+
+- **Pas de MCP maintenant** : MCP sera introduit après stabilisation de la plateforme (jusqu'à Chainlit + Langfuse), pas pendant le debug du smoke test
+- **Mini corpus d'abord** : objectif court terme = prouver RAG + agent RCA sur un corpus checkout minimal, pas sur tout le service
+- **Langfuse plus tard** : Azure Foundry monitoring suffit pour voir quotas/tokens/429 ; Langfuse restera utile en Phase 5 pour tracing LLM/agent
 
 ### Prochaine étape
 
-- Relancer le smoke test complet (`scripts/smoke-test.sh`) une fois l'embedding terminé
-- Tester `/query` (Firestore vector search) et `/query/rca` (LangGraph RCA agent)
-- Si OK → Phase 4.5d Done, passer à Phase 4.6 (Vertex AI fallback)
+1. Déployer/tester le correctif worker `worker/main.py` pour stabiliser les subscriptions JetStream au restart
+2. Réduire le smoke test à un **mini corpus checkout** (quelques fichiers critiques, quelques dizaines de chunks max)
+3. Obtenir enfin un `store complete` visible dans les logs worker
+4. Retester manuellement `/query` jusqu'à obtenir des résultats Firestore non vides
+5. Retester `/query/rca` avec vrai contexte code
+6. Si OK → Phase 4.5d Done, puis Phase 4.6 (validation Vertex fallback)
 
 ## Décisions d'architecture
 

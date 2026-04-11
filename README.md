@@ -6,35 +6,34 @@ This repo contains the **backend API** and **worker** microservices. Infrastruct
 
 ## Architecture
 
-```
-                         ┌──────────────────────────────┐
-  User request ─────────>│        rag-backend            │ (FastAPI)
-  POST /ingest/repo      │  /ingest  /query  /query/rca  │
-                         └──────┬───────────┬────────────┘
-                                │           │
-                  publish       │           │  LangGraph RCA Agent
-                  rag.ingest    │           │  (search vectors + Loki
-                                │           │   + Prometheus + Tempo)
-                         ┌──────▼──────┐    │
-                         │    NATS     │    │
-                         │  JetStream  │    │
-                         │  Stream: RAG│    │
-                         └──────┬──────┘    │
-                                │ consume   │
-                         ┌──────▼──────┐    │
-                         │ rag-worker  │    │
-                         │ clone → parse│    │
-                         │ chunk → embed│    │
-                         │ → store      │    │
-                         └──────┬──────┘    │
-                                │           │
-              ┌─────────────────┼───────────┘
-              │                 │
-              ▼                 ▼
-        Azure OpenAI      GCP Firestore        Azure Redis
-        (embeddings +     (vector store,       (job status
-         chat LLM)        collection:           cache)
-                          code-chunks)
+A clearer runtime diagram is available in [docs/ARCHITECTURE.md](/C:/Users/cheik/OneDrive/Old%20OneDrive/Documents/code/mon-rag-multicloud/rag-platform-app/docs/ARCHITECTURE.md).
+
+```mermaid
+flowchart LR
+    user[User / API client]
+    backend[rag-backend\nFastAPI]
+    nats[NATS JetStream]
+    worker[rag-worker]
+    aoai[Azure OpenAI]
+    firestore[Firestore\ncode-chunks]
+    redis[Azure Redis]
+    agent[LangGraph RCA Agent]
+    obs[Loki + Prometheus + Tempo]
+
+    user -->|/ingest/repo| backend
+    user -->|/query| backend
+    user -->|/query/rca| backend
+    backend -->|publish jobs| nats
+    nats -->|consume jobs| worker
+    worker -->|generate embeddings| aoai
+    worker -->|store vectors| firestore
+    worker -->|update status| redis
+    backend -->|vector search| firestore
+    backend -->|job status| redis
+    backend --> agent
+    agent -->|LLM reasoning| aoai
+    agent -->|search code| firestore
+    agent -->|logs / metrics / traces| obs
 ```
 
 ### Why this design?
