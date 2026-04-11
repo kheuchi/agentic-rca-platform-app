@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/kheuchi/rag-platform-app/compare/v1.5.1...v1.6.0) (2026-04-11)
+
+
+### Features
+
+* stabilize smoke test and document architecture ([a8faaa1](https://github.com/kheuchi/rag-platform-app/commit/a8faaa17dc2aaa2fa77d270a56baa1a90c2b6b90))
+
 ## [1.5.1](https://github.com/kheuchi/rag-platform-app/compare/v1.5.0...v1.5.1) (2026-04-08)
 
 
