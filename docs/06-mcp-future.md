@@ -1,5 +1,7 @@
 # Phase 6 — MCP (Model Context Protocol) — Future implementation
 
+Version francaise. English version: [06-mcp-future.en.md](./06-mcp-future.en.md)
+
 > **Statut : non implémenté.** MCP sera introduit après stabilisation de la plateforme (post Phase 5 — Langfuse + Kubecost) et post intégration Chainlit.
 >
 > Ce document décrit l'architecture cible et les motivations du choix.

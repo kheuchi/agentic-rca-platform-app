@@ -1,5 +1,7 @@
 # Étape 2 — Publication dans NATS JetStream
 
+Version francaise. English version: [02-nats-publish.en.md](./02-nats-publish.en.md)
+
 > Flux complet : [Étape 1](./01-request-entry.md) → **[Étape 2]** → [Étape 3](./03-worker-pipeline.md) → [Étape 4](./04-query-vector.md) → [Étape 5](./05-rca-agent.md)
 
 ---

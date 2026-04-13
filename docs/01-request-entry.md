@@ -1,5 +1,7 @@
 # Étape 1 — Réception de la requête (FastAPI backend)
 
+Version francaise. English version: [01-request-entry.en.md](./01-request-entry.en.md)
+
 > Flux complet : **[Étape 1]** → [Étape 2](./02-nats-publish.md) → [Étape 3](./03-worker-pipeline.md) → [Étape 4](./04-query-vector.md) → [Étape 5](./05-rca-agent.md)
 
 ---

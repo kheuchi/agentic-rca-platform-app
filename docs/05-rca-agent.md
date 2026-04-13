@@ -1,5 +1,7 @@
 # Étape 5 — Agent RCA LangGraph (`/query/rca`)
 
+Version francaise. English version: [05-rca-agent.en.md](./05-rca-agent.en.md)
+
 > Flux complet : [Étape 1](./01-request-entry.md) → [Étape 2](./02-nats-publish.md) → [Étape 3](./03-worker-pipeline.md) → [Étape 4](./04-query-vector.md) → **[Étape 5]** → [Phase 6 — MCP](./06-mcp-future.md)
 
 ---

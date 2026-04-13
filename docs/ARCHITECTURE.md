@@ -1,5 +1,7 @@
 # Architecture
 
+English version. Version francaise: [ARCHITECTURE.fr.md](./ARCHITECTURE.fr.md)
+
 This page documents the runtime architecture of `rag-platform-app` with Mermaid diagrams.
 
 GitHub renders Mermaid directly in Markdown, which makes it a good fit for versioned architecture docs.
@@ -113,3 +115,17 @@ flowchart TD
 - `backend -> Firestore` for vector search: same Firestore client path, via the Google SDK.
 - `agent -> Loki / Prometheus / Tempo`: HTTP API calls (`LogQL`, `PromQL`, `TraceQL` queries, depending on the backend).
 - `backend/worker -> Redis`: Redis protocol via the async Redis client, when Redis is available.
+
+## Observability data sources
+
+The RCA agent does not query buckets, PVCs, or raw databases for observability data.
+
+It calls:
+- Loki over its HTTP API for logs
+- Prometheus over its HTTP API for metrics
+- Tempo over its HTTP API for traces
+
+Those calls are implemented in:
+- [backend/agent/tools/loki.py](../backend/agent/tools/loki.py)
+- [backend/agent/tools/prometheus.py](../backend/agent/tools/prometheus.py)
+- [backend/agent/tools/tempo.py](../backend/agent/tools/tempo.py)
