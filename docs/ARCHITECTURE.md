@@ -129,3 +129,19 @@ Those calls are implemented in:
 - [backend/agent/tools/loki.py](../backend/agent/tools/loki.py)
 - [backend/agent/tools/prometheus.py](../backend/agent/tools/prometheus.py)
 - [backend/agent/tools/tempo.py](../backend/agent/tools/tempo.py)
+
+## Physical storage in the current cluster
+
+Observed in AKS on 2026-04-13:
+- `otel-demo-prometheus-server` stores its TSDB at `/data`
+- `/data` is mounted from an `EmptyDir` volume
+- no PVCs were present in `otel-demo`
+- no StatefulSets were present in `otel-demo`
+
+That means the currently visible Prometheus metrics are stored on ephemeral pod storage, not on a persistent disk claim.
+
+For Loki and Tempo, the backend is configured to query:
+- `otel-demo-loki`
+- `otel-demo-tempo`
+
+However, those services were not present in the namespace during verification, so their physical storage backend could not be confirmed from live resources at that moment.

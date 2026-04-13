@@ -214,6 +214,13 @@ flowchart LR
 
 Chaque tool fait un appel HTTP direct à son backend (Loki, Prometheus, Tempo tournent dans le namespace `otel-demo` du cluster). Si un tool échoue, l'agent continue avec les autres — l'erreur est loggée et ajoutée aux messages du state.
 
+**Où vivent physiquement ces données ?**
+
+- L'agent **ne lit pas** un bucket, un PVC ou une base brute directement ; il interroge les APIs HTTP de Loki, Prometheus et Tempo.
+- Vérification cluster du `2026-04-13` : `otel-demo-prometheus-server` stocke sa TSDB dans `/data`, monté sur un volume `EmptyDir`.
+- Il n'y avait **aucun PVC** ni **aucun StatefulSet** visible dans le namespace `otel-demo`, donc les métriques Prometheus actuellement visibles sont sur du stockage éphémère de pod.
+- Le backend est configuré pour appeler `otel-demo-loki` et `otel-demo-tempo`, mais ces services n'étaient pas présents dans le namespace au moment du contrôle ; leur stockage physique n'a donc pas pu être confirmé depuis les workloads actifs.
+
 ---
 
 ## 5.6 Node ③ — `correlate_findings` : le LLM analyse

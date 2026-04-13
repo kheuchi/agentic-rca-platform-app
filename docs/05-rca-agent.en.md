@@ -70,6 +70,11 @@ Important clarification:
 - the agent does not read logs, metrics, or traces from buckets, PVCs, or raw databases
 - it calls Loki, Prometheus, and Tempo through their service APIs inside the cluster
 
+Physical storage, as verified on 2026-04-13:
+- Prometheus stores data in `/data` on an `EmptyDir` volume inside `otel-demo-prometheus-server`
+- no PVC-backed observability storage was visible in `otel-demo`
+- Loki and Tempo URLs are configured, but their services were not present during this verification, so their physical storage could not be confirmed from live resources
+
 ## Node 3 - `correlate_findings`
 
 The LLM analyzes all accumulated evidence and produces:
