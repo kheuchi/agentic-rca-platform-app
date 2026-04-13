@@ -111,13 +111,11 @@ COUNT=0
 QUERY_RESP=""
 
 while [ "$QUERY_ELAPSED" -lt "$QUERY_POLL_TIMEOUT" ]; do
-  # No service_filter: OTel Demo renamed src/checkoutservice → src/checkout,
-  # so current worker image (pre-rename map) stores chunks as service_name=unknown.
-  # Parse.py fix is in repo, will take effect after the next worker image rebuild.
   QUERY_RESP=$(curl -s -X POST "${BASE_URL}/query" \
     -H "Content-Type: application/json" \
     -d '{
       "query": "checkout service main function",
+      "service_filter": "checkoutservice",
       "top_k": 3
     }')
 
