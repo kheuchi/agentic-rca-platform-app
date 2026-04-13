@@ -64,40 +64,39 @@ TEMPO_URL=http://otel-demo-tempo.otel-demo.svc.cluster.local:3200
 | 4.5a — Azure OpenAI + Firestore + AKS spot (Terraform) | infra | ✅ Done 2026-03-29 |
 | 4.5b — GitOps : env vars + OTel Demo + KEDA fix | gitops | ✅ Done 2026-03-29 |
 | 4.5c — Swap Azure AI Search → Firestore dans le code | app | ✅ Done 2026-03-29 |
-| **4.5d — e2e smoke test** | **app** | **⏳ Steps 0-3 ✅ (2026-04-13), Step 4 RCA bloqué OOM 512Mi** |
-| 4.6 — Multi-cloud validation (Vertex AI fallback) | app | ⬜ Pending |
+| **4.5d — e2e smoke test** | **app** | **✅ Done 2026-04-13** |
+| 4.6 — Multi-cloud validation (Vertex AI fallback) | app | ⏳ Ready to start |
 | 5 — Langfuse + Kubecost | tous | ⬜ Pending |
 | 6 — RAG + MCP hybride (navigation code live) | app | ⬜ Planned |
 
 ## Phase 4.5d — Smoke test progress (2026-04-13)
 
-### Run du 2026-04-13 — Steps 0-3 validés bout en bout ✅
+### Run final du 2026-04-13 — Steps 0-4 validés bout en bout ✅
 
-Pipeline cold path **fonctionnel de bout en bout** sur le mini corpus :
+Pipeline cold path **fonctionnel de bout en bout** sur le mini corpus, après merge des PRs app et gitops puis redéploiement des pods :
 
 - **Step 0** ✅ Health check backend
-- **Step 1** ✅ `/ingest/repo` queued (job `f6b5527e-…`)
-- **Step 2** ⚠️ Endpoint `/ingest/status/{id}` renvoie 503 (Redis non dispo, Crossplane en attente). Script fallback sur polling `/query`.
-- **Step 3** ✅ `/query` retourne **3 résultats** sur `src/checkout/main.go` (16 chunks indexés dans Firestore). Code search logué côté backend : `Code search: 3 results`.
-- **Step 4** ❌ `/query/rca` : **backend OOMKilled (exit 137)** pendant l'agent. Limite mémoire actuelle 512Mi insuffisante pour LangGraph + gpt-4o + tools loki/prom/tempo. Pas un bug code, un sizing.
+- **Step 1** ✅ `/ingest/repo` queued
+- **Step 2** ⚠️ Endpoint `/ingest/status/{id}` renvoie toujours 503 (Redis non dispo). Script reste en fallback sur polling `/query`.
+- **Step 3** ✅ `/query` retourne **3 résultats** sur `src/checkout/main.go` avec `service_filter=checkoutservice`
+- **Step 4** ✅ `/query/rca` retourne un rapport RCA HTTP 200 avec `confidence=0.78`, sans restart backend
 
-Logs worker clé :
-```
-Parsed 1 files (patterns=['src/checkout/main.go'], services=['checkoutservice'])
-Chunked 1 files into 16 nodes
-Embedded 16 chunks total
-Upserted batch 0-16: 16 succeeded
-Stored 16/16 chunks in Firestore collection 'code-chunks'
-Repo ingest job=... completed: 16 chunks indexed
-```
+Validation complémentaire post-run :
 
-### Découvertes du 2026-04-13
+- `/query` avec `service_filter=checkoutservice` retourne **3 résultats**
+- les résultats Firestore exposent maintenant `service_name=checkoutservice` (plus `unknown`)
+- le pod `rag-backend` redéployé charge le fix `asyncio.to_thread(...)` dans [backend/agent/tools/code_search.py](backend/agent/tools/code_search.py)
+- le pod `rag-worker` redéployé charge la nouvelle map OTel Demo dans [worker/pipeline/parse.py](worker/pipeline/parse.py)
 
-9. **OTel Demo a renommé ses services** — `src/checkoutservice/` → `src/checkout/`, idem pour cart/payment/shipping/etc. Sans majorité des suffixes `service`. Cassait `parse.py/OTEL_DEMO_SERVICE_MAP`, qui mappait sur les anciens chemins. **Fix appliqué** dans [worker/pipeline/parse.py](worker/pipeline/parse.py) : map augmentée avec les nouveaux paths (ancien + nouveau en parallèle, canonical service name conservé `checkoutservice`). ⚠️ Nécessite un **rebuild image worker** pour prendre effet en cluster — le run 2026-04-13 a indexé avec `service_name=unknown` faute d'image à jour.
+### Découvertes et fixes finalisés le 2026-04-13
 
-10. **Workaround smoke-test sans rebuild** — `scripts/smoke-test.sh` Step 3 ne filtre plus par `service_filter` (commentaire en place). Le vector search seul suffit pour valider la similarité. À remettre après rebuild image worker.
+9. **OTel Demo a renommé ses services** — `src/checkoutservice/` → `src/checkout/`, idem pour cart/payment/shipping/etc. Cela cassait `parse.py/OTEL_DEMO_SERVICE_MAP`. **Fix appliqué et maintenant déployé** : map augmentée avec nouveaux + anciens paths, canonical service name conservé `checkoutservice`.
 
-11. **Blocker mémoire RCA agent** — backend OOM à 512Mi pendant l'appel `/query/rca`. À bumper à **1Gi min** côté gitops (`rag-platform-gitops/.../rag-backend/deployment.yaml`) avant de retester Step 4.
+10. **`service_filter` restauré dans le smoke test** — après rebuild/redeploy worker validé, [scripts/smoke-test.sh](scripts/smoke-test.sh) Step 3 filtre à nouveau sur `checkoutservice`.
+
+11. **Blocker mémoire / réactivité RCA résolu** — le bump gitops `rag-backend` à **1Gi** était nécessaire mais pas suffisant. Le backend bloquait encore les probes pendant la recherche Firestore synchrone. **Fix appliqué et déployé** dans [backend/agent/tools/code_search.py](backend/agent/tools/code_search.py) : recherche Firestore déplacée hors event loop via `asyncio.to_thread(...)`.
+
+12. **Release pipeline images débloqué** — la release `v1.6.2` a d'abord échoué sur Trivy (`CVE-2026-28390` dans OpenSSL du base image). **Fix appliqué** dans `backend/Dockerfile` et `worker/Dockerfile` via `apt-get upgrade`, puis nouvelle release `v1.6.3` publiée avec images backend/worker poussées sur GHCR.
 
 ### Blockers résolus
 
@@ -124,19 +123,19 @@ Repo ingest job=... completed: 16 chunks indexed
 
 5. **⏳ Redis** — non-critique. Le secret `redis-rag-dev-conn` dépend de Crossplane Azure Redis (Basic C0). Le worker fonctionne sans Redis (status tracking dégradé, `optional: true`).
 
-6. **⏳ Azure OpenAI rate limiting (429)** — le tier S0 rate-limit les embeddings. Pattern observé : 2 à 4 batches de 16 chunks passent, puis 429 avec retry 11-60s. Pour 264 chunks → indexation très lente. Non bloquant fonctionnellement, mais gênant pour le smoke test e2e.
+6. **⏳ Azure OpenAI rate limiting (429)** — le tier S0 rate-limit les embeddings. Pattern observé : 2 à 4 batches de 16 chunks passent, puis 429 avec retry 11-60s. Pour 264 chunks → indexation très lente. Non bloquant pour le mini corpus, mais gênant pour des corpus plus larges.
 
 7. **✅ Worker JetStream restart bug** — résolu + validé en cluster 2026-04-13. Le correctif `subscribe_with_retry` dans [worker/main.py](worker/main.py) boucle sur `JetStream.Error "already bound"` avec un backoff 5s jusqu'à libération du durable. Testé via `kubectl delete pod` + purge NATS : le nouveau pod rebind proprement les deux durables `rag-worker` / `rag-worker-repo`.
 
-8. **✅ Corpus smoke test trop large pour S0** — résolu 2026-04-13. Le défaut de `scripts/smoke-test.sh` est maintenant le mini corpus `src/checkoutservice/main.go` (1 fichier, ~quelques chunks). Override possible via env vars `SERVICES` et `FILE_PATTERNS` pour repasser sur `**/*.go` une fois le pipeline stable.
+8. **✅ Corpus smoke test trop large pour S0** — résolu 2026-04-13. Le défaut de `scripts/smoke-test.sh` reste le mini corpus `src/checkout/main.go` (1 fichier, ~quelques chunks). Override possible via env vars `SERVICES` et `FILE_PATTERNS` pour repasser sur `**/*.go` une fois le pipeline stable.
 
 ### État actuel du pipeline (2026-04-13 après run)
 
 - Backend **Running** : `/health` OK, Firestore accessible, `/query` ✅ retourne résultats réels
 - **Cold path complet VALIDÉ** : clone → parse → chunk → embed (sans 429 sur mini corpus) → **store 16/16 Firestore** ✅
 - `/query` : `Code search: 3 results` côté backend, réponse HTTP 200 avec count=3
-- `/query/rca` : **bloqué par OOM backend 512Mi** — le code marche, le sizing ne suit pas. Pas retesté depuis le bump mémoire (pas encore fait)
-- Service name stocké : `unknown` au lieu de `checkoutservice` tant que l'image worker n'est pas reconstruite avec le fix `OTEL_DEMO_SERVICE_MAP`
+- `/query/rca` : ✅ retourne un rapport RCA avec confiance `0.78` sur le mini corpus
+- Service name stocké : ✅ `checkoutservice` sur `src/checkout/main.go`
 
 ### Tests manuels réalisés (cumulé)
 
@@ -156,16 +155,10 @@ Repo ingest job=... completed: 16 chunks indexed
 
 1. ✅ `subscribe_with_retry` validé en cluster 2026-04-13 (bind clean au restart worker)
 2. ✅ Mini corpus appliqué + défaut mis à jour après rename OTel demo : `src/checkout/main.go`
-3. ✅ `store complete` obtenu (16/16 chunks Firestore)
-4. ✅ `/query` retourne 3 résultats sur mini corpus
-5. ⏳ **Bump mémoire rag-backend 512Mi → 1Gi** — PR gitops [#9](https://github.com/kheuchi/rag-platform-gitops/pull/9) ouverte 2026-04-13 (request 256Mi→512Mi, limit 512Mi→1Gi). En attente merge + ArgoCD sync.
-6. ⏳ **Rebuild image worker** — PR app [#1](https://github.com/kheuchi/rag-platform-app/pull/1) ouverte 2026-04-13 (`fix(worker): map renamed OTel demo service paths`). En attente merge → semantic-release → nouvelle image `ghcr.io/kheuchi/rag-worker:latest`. Ensuite remettre `service_filter` dans smoke-test.sh Step 3 (PR de suivi).
-7. ⏳ Une fois les deux PRs mergées + cluster à jour : relancer le smoke-test
-   ```
-   wsl kubectl port-forward svc/rag-backend 8000:80 -n rag-dev
-   wsl bash scripts/smoke-test.sh
-   ```
-8. Si Steps 0–4 tous verts → Phase 4.5d Done, puis Phase 4.6 (validation Vertex fallback).
+3. ✅ `store complete` obtenu sur le mini corpus
+4. ✅ `/query` retourne 3 résultats avec `service_filter=checkoutservice`
+5. ✅ `/query/rca` retourne un rapport RCA sans restart backend
+6. ⏭️ **Phase 4.6 — validation Vertex AI fallback** : provoquer/émuler le fallback Azure OpenAI → Vertex AI et vérifier la continuité des réponses LLM/embeddings
 
 ## Décisions d'architecture
 
