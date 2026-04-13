@@ -1,5 +1,7 @@
 # Étape 3 — Pipeline worker (clone → parse → chunk → embed → store)
 
+Version francaise. English version: [03-worker-pipeline.en.md](./03-worker-pipeline.en.md)
+
 > Flux complet : [Étape 1](./01-request-entry.md) → [Étape 2](./02-nats-publish.md) → **[Étape 3]** → [Étape 4](./04-query-vector.md) → [Étape 5](./05-rca-agent.md)
 
 ---
