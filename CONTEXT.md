@@ -158,13 +158,14 @@ Repo ingest job=... completed: 16 chunks indexed
 2. ✅ Mini corpus appliqué + défaut mis à jour après rename OTel demo : `src/checkout/main.go`
 3. ✅ `store complete` obtenu (16/16 chunks Firestore)
 4. ✅ `/query` retourne 3 résultats sur mini corpus
-5. ⏳ **Bumper mémoire rag-backend 512Mi → 1Gi** côté gitops, puis relancer Step 4 RCA :
+5. ⏳ **Bump mémoire rag-backend 512Mi → 1Gi** — PR gitops [#9](https://github.com/kheuchi/rag-platform-gitops/pull/9) ouverte 2026-04-13 (request 256Mi→512Mi, limit 512Mi→1Gi). En attente merge + ArgoCD sync.
+6. ⏳ **Rebuild image worker** — PR app [#1](https://github.com/kheuchi/rag-platform-app/pull/1) ouverte 2026-04-13 (`fix(worker): map renamed OTel demo service paths`). En attente merge → semantic-release → nouvelle image `ghcr.io/kheuchi/rag-worker:latest`. Ensuite remettre `service_filter` dans smoke-test.sh Step 3 (PR de suivi).
+7. ⏳ Une fois les deux PRs mergées + cluster à jour : relancer le smoke-test
    ```
    wsl kubectl port-forward svc/rag-backend 8000:80 -n rag-dev
    wsl bash scripts/smoke-test.sh
    ```
-6. ⏳ **Rebuild image worker** avec le fix `OTEL_DEMO_SERVICE_MAP` (commit conventional `fix(worker): map renamed OTel demo service paths`) pour que les chunks soient stockés avec `service_name=checkoutservice` au lieu de `unknown`. Ensuite remettre `service_filter` dans smoke-test.sh Step 3.
-7. Si Steps 0–4 tous verts → Phase 4.5d Done, puis Phase 4.6 (validation Vertex fallback).
+8. Si Steps 0–4 tous verts → Phase 4.5d Done, puis Phase 4.6 (validation Vertex fallback).
 
 ## Décisions d'architecture
 
