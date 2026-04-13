@@ -1,6 +1,7 @@
 FROM python:3.12-slim AS base
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends \
     git \
     libgl1 \
     poppler-utils \
