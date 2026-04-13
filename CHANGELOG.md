@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/kheuchi/rag-platform-app/compare/v1.6.1...v1.6.2) (2026-04-13)
+
+
+### Bug Fixes
+
+* prevent rca probe stalls and skip unknown service chunks ([#2](https://github.com/kheuchi/rag-platform-app/issues/2)) ([056cdb2](https://github.com/kheuchi/rag-platform-app/commit/056cdb2eb2b7765ffd2ab98c7a88e57bac66bc9e))
+
 ## [1.6.1](https://github.com/kheuchi/rag-platform-app/compare/v1.6.0...v1.6.1) (2026-04-13)
 
 
