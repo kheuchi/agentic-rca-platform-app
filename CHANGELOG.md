@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/kheuchi/rag-platform-app/compare/v1.6.0...v1.6.1) (2026-04-13)
+
+
+### Bug Fixes
+
+* **worker:** map renamed OTel demo service paths ([#1](https://github.com/kheuchi/rag-platform-app/issues/1)) ([cfe274f](https://github.com/kheuchi/rag-platform-app/commit/cfe274f8c439ef012c90a5f90b4222d1955e6911)), closes [#9](https://github.com/kheuchi/rag-platform-app/issues/9)
+
 # [1.6.0](https://github.com/kheuchi/rag-platform-app/compare/v1.5.1...v1.6.0) (2026-04-11)
 
 
