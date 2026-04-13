@@ -19,6 +19,7 @@ La documentation technique du flux complet est découpée en 5 étapes :
 | 3 | Pipeline worker — clone → parse → chunk → embed → store | [docs/03-worker-pipeline.md](docs/03-worker-pipeline.md) |
 | 4 | Query vectorielle simple (`/query` → Firestore) | [docs/04-query-vector.md](docs/04-query-vector.md) |
 | 5 | Agent RCA LangGraph (`/query/rca` → SSE streaming) | [docs/05-rca-agent.md](docs/05-rca-agent.md) |
+| 6 | MCP — future implementation (Phase 6) | [docs/06-mcp-future.md](docs/06-mcp-future.md) |
 
 ```mermaid
 flowchart LR

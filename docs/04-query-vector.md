@@ -1,6 +1,6 @@
 # Étape 4 — Query vectorielle simple (`/query`)
 
-> Flux complet : [Étape 1](./01-request-entry.md) → [Étape 2](./02-nats-publish.md) → [Étape 3](./03-worker-pipeline.md) → **[Étape 4]** → [Étape 5](./05-rca-agent.md)
+> Flux complet : [Étape 1](./01-request-entry.md) → [Étape 2](./02-nats-publish.md) → [Étape 3](./03-worker-pipeline.md) → **[Étape 4]** → [Étape 5](./05-rca-agent.md) → [Phase 6 — MCP](./06-mcp-future.md)
 
 ---
 
