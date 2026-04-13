@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/kheuchi/rag-platform-app/compare/v1.6.2...v1.6.3) (2026-04-13)
+
+
+### Bug Fixes
+
+* upgrade base image packages before release scan ([#3](https://github.com/kheuchi/rag-platform-app/issues/3)) ([db52b0a](https://github.com/kheuchi/rag-platform-app/commit/db52b0ac2fcd97ff7e1d3c0f76bb00bf6dc9e526))
+
 ## [1.6.2](https://github.com/kheuchi/rag-platform-app/compare/v1.6.1...v1.6.2) (2026-04-13)
 
 
