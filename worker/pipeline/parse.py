@@ -133,8 +133,10 @@ def parse_files(
 
             service = detect_service(rel_path)
 
-            # Filter by service if specified
-            if services and service not in services and service != "unknown":
+            # If the caller asked for specific services, skip anything outside that set,
+            # including files we failed to map. This prevents re-indexing ambiguous chunks
+            # under service_name=unknown during targeted smoke tests.
+            if services and service not in services:
                 continue
 
             try:
