@@ -1,5 +1,6 @@
 """Code vector search tool — vector search against GCP Firestore."""
 
+import asyncio
 import logging
 
 from google.cloud.firestore import Client as FirestoreClient
@@ -17,6 +18,39 @@ def _get_firestore_client() -> FirestoreClient:
         project=settings.gcp_project_id,
         database=settings.firestore_database,
     )
+
+
+def _run_vector_search(
+    query_embedding: list[float],
+    service_filter: str | None,
+    top_k: int,
+) -> list[dict]:
+    """Run the blocking Firestore vector search off the asyncio event loop."""
+    db = _get_firestore_client()
+    collection = db.collection(settings.firestore_collection)
+
+    query_ref = collection
+    if service_filter:
+        query_ref = query_ref.where("service_name", "==", service_filter)
+
+    vector_query = query_ref.find_nearest(
+        vector_field="embedding",
+        query_vector=Vector(query_embedding),
+        distance_measure=DistanceMeasure.COSINE,
+        limit=top_k,
+    )
+
+    results = []
+    for doc in vector_query.get():
+        data = doc.to_dict()
+        results.append({
+            "file_path": data.get("file_path", ""),
+            "service_name": data.get("service_name", ""),
+            "language": data.get("language", ""),
+            "content": data.get("content", ""),
+            "score": data.get("distance", 0),
+        })
+    return results
 
 
 @tool
@@ -41,32 +75,12 @@ async def search_code_vectors(
     embed_model = get_embedding_model()
     query_embedding = await embed_model.aget_text_embedding(query)
 
-    # Firestore vector search
-    db = _get_firestore_client()
-    collection = db.collection(settings.firestore_collection)
-
-    query_ref = collection
-
-    if service_filter:
-        query_ref = query_ref.where("service_name", "==", service_filter)
-
-    vector_query = query_ref.find_nearest(
-        vector_field="embedding",
-        query_vector=Vector(query_embedding),
-        distance_measure=DistanceMeasure.COSINE,
-        limit=top_k,
+    results = await asyncio.to_thread(
+        _run_vector_search,
+        query_embedding,
+        service_filter,
+        top_k,
     )
-
-    results = []
-    for doc in vector_query.get():
-        data = doc.to_dict()
-        results.append({
-            "file_path": data.get("file_path", ""),
-            "service_name": data.get("service_name", ""),
-            "language": data.get("language", ""),
-            "content": data.get("content", ""),
-            "score": data.get("distance", 0),
-        })
 
     logger.info("Code search: %d results for query='%s' service=%s", len(results), query[:50], service_filter)
     return results
