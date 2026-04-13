@@ -37,6 +37,22 @@ Il interroge les backends d'observabilite via leurs API HTTP :
 
 Dans le deploiement AKS actuel, ces services tournent dans le namespace `otel-demo`. L'agent parle aux systemes d'observabilite, pas a leur couche de stockage sous-jacente.
 
+### Stockage physique dans le cluster actuel
+
+La question du stockage physique est distincte de l'API appelee par l'agent.
+
+La verification cluster du 2026-04-13 a montre que :
+- les metriques Prometheus sont stockees dans le pod `otel-demo-prometheus-server` via `--storage.tsdb.path=/data`
+- ce repertoire `/data` est monte sur un volume `EmptyDir`, pas sur un PVC
+- il n'y a ni PVC ni StatefulSet dans le namespace `otel-demo` pour les workloads d'observabilite actuellement visibles
+
+Donc, dans l'environnement actuel, les metriques Prometheus sont physiquement stockees sur un stockage ephemere local au pod et sont perdues si le pod est recree.
+
+Pour Loki et Tempo :
+- le backend est configure pour appeler `otel-demo-loki` et `otel-demo-tempo`
+- ces services n'etaient pas presents dans le namespace au moment de la verification
+- leur mode de stockage physique n'a donc pas pu etre confirme a partir des workloads actifs pendant ce controle
+
 ## Architecture d'execution
 
 Un schema plus detaille est disponible dans [docs/ARCHITECTURE.fr.md](docs/ARCHITECTURE.fr.md).

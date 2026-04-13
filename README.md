@@ -72,6 +72,22 @@ It queries the observability backends through their HTTP APIs:
 
 In the current AKS deployment, those services run in the `otel-demo` namespace. The agent talks to the observability systems, not to their underlying storage layer.
 
+### Physical storage in the current cluster
+
+What is physically stored where is a separate question from which API the agent calls.
+
+Cluster verification on 2026-04-13 showed:
+- Prometheus data is stored in the `otel-demo-prometheus-server` pod under `--storage.tsdb.path=/data`
+- that `/data` path is backed by an `EmptyDir` volume, not a PVC
+- there are no PVCs or StatefulSets in the `otel-demo` namespace for the currently visible observability workloads
+
+So, in the current environment, Prometheus metrics are physically stored on ephemeral node-backed pod storage and are lost if the pod is recreated.
+
+For Loki and Tempo:
+- the backend is configured to call `otel-demo-loki` and `otel-demo-tempo`
+- those services were not present in the namespace at the time of verification
+- because of that, their physical storage mode could not be confirmed from running workloads during this check
+
 ## Why this design
 
 - Event-driven ingestion: the backend publishes jobs to NATS and returns immediately.
