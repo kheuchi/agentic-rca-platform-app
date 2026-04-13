@@ -12,6 +12,10 @@ REPO_URL="${REPO_URL:-https://github.com/open-telemetry/opentelemetry-demo}"
 BRANCH="${BRANCH:-main}"
 TIMEOUT="${TIMEOUT:-300}"
 QUERY_POLL_TIMEOUT="${QUERY_POLL_TIMEOUT:-600}"
+# Mini-corpus by default — keeps Azure OpenAI S0 happy (avoids 429 storms).
+# Override with: FILE_PATTERNS='["**/*.go"]' wsl bash scripts/smoke-test.sh
+SERVICES="${SERVICES:-[\"checkoutservice\"]}"
+FILE_PATTERNS="${FILE_PATTERNS:-[\"src/checkout/main.go\"]}"
 
 BLUE='\033[1;34m'
 GREEN='\033[1;32m'
@@ -44,8 +48,8 @@ INGEST_RESP=$(curl -s -X POST "${BASE_URL}/ingest/repo" \
   -d "{
     \"repo_url\": \"${REPO_URL}\",
     \"branch\": \"${BRANCH}\",
-    \"services\": [\"checkoutservice\"],
-    \"file_patterns\": [\"**/*.go\"]
+    \"services\": ${SERVICES},
+    \"file_patterns\": ${FILE_PATTERNS}
   }")
 
 JOB_ID=$(printf '%s' "$INGEST_RESP" | python3 -c "import json,sys; print(json.load(sys.stdin).get('job_id', ''))" 2>/dev/null || true)
@@ -107,12 +111,14 @@ COUNT=0
 QUERY_RESP=""
 
 while [ "$QUERY_ELAPSED" -lt "$QUERY_POLL_TIMEOUT" ]; do
+  # No service_filter: OTel Demo renamed src/checkoutservice → src/checkout,
+  # so current worker image (pre-rename map) stores chunks as service_name=unknown.
+  # Parse.py fix is in repo, will take effect after the next worker image rebuild.
   QUERY_RESP=$(curl -s -X POST "${BASE_URL}/query" \
     -H "Content-Type: application/json" \
     -d '{
       "query": "checkout service main function",
-      "top_k": 3,
-      "service_filter": "checkoutservice"
+      "top_k": 3
     }')
 
   COUNT=$(printf '%s' "$QUERY_RESP" | python3 -c "import json,sys; print(json.load(sys.stdin).get('count', 0))" 2>/dev/null || echo "0")

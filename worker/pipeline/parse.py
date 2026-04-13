@@ -25,8 +25,28 @@ EXTENSION_LANG_MAP = {
     ".dockerfile": "dockerfile",
 }
 
-# OTel Demo service-to-directory mapping
+# OTel Demo service-to-directory mapping.
+# Upstream renamed dirs in 2025 (src/checkoutservice → src/checkout). We keep the
+# legacy *service* identifiers so downstream filters, docs and RCA prompts stay stable,
+# and map both old and new directory layouts to the same canonical service name.
 OTEL_DEMO_SERVICE_MAP = {
+    # New layout (post-rename)
+    "src/accounting": "accountingservice",
+    "src/ad": "adservice",
+    "src/cart": "cartservice",
+    "src/checkout": "checkoutservice",
+    "src/currency": "currencyservice",
+    "src/email": "emailservice",
+    "src/fraud-detection": "frauddetectionservice",
+    "src/frontend-proxy": "frontendproxy",
+    "src/frontend": "frontend",
+    "src/load-generator": "loadgenerator",
+    "src/payment": "paymentservice",
+    "src/product-catalog": "productcatalogservice",
+    "src/quote": "quoteservice",
+    "src/recommendation": "recommendationservice",
+    "src/shipping": "shippingservice",
+    # Legacy layout (pre-rename) — kept for older snapshots/branches
     "src/accountingservice": "accountingservice",
     "src/adservice": "adservice",
     "src/cartservice": "cartservice",
@@ -34,7 +54,6 @@ OTEL_DEMO_SERVICE_MAP = {
     "src/currencyservice": "currencyservice",
     "src/emailservice": "emailservice",
     "src/frauddetectionservice": "frauddetectionservice",
-    "src/frontend": "frontend",
     "src/frontendproxy": "frontendproxy",
     "src/loadgenerator": "loadgenerator",
     "src/paymentservice": "paymentservice",
