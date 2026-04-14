@@ -26,6 +26,7 @@ The technical documentation is available in both languages.
 | Step 5 - RCA agent | [docs/05-rca-agent.en.md](docs/05-rca-agent.en.md) | [docs/05-rca-agent.md](docs/05-rca-agent.md) |
 | Phase 6 - MCP future | [docs/06-mcp-future.en.md](docs/06-mcp-future.en.md) | [docs/06-mcp-future.md](docs/06-mcp-future.md) |
 | Current `otel-demo` state | [docs/07-otel-demo-current-state.en.md](docs/07-otel-demo-current-state.en.md) | [docs/07-otel-demo-current-state.md](docs/07-otel-demo-current-state.md) |
+| Metrics follow-up | [docs/08-metrics-follow-up.en.md](docs/08-metrics-follow-up.en.md) | [docs/08-metrics-follow-up.md](docs/08-metrics-follow-up.md) |
 
 ## Runtime architecture
 
@@ -144,7 +145,8 @@ docker run -p 4222:4222 nats:latest -js
 
 ## Current status
 
-- Phase 4.5d: done
-- Phase 4.6: next target, validate Vertex AI fallback
+- Phase 4.5d: done, with an RCA MVP validated on `code + logs + traces`
+- Metrics remain a dedicated follow-up item
+- Phase 4.6: now active, validate Vertex AI fallback
 - Phase 5: pending
 - Phase 6: planned

@@ -125,6 +125,17 @@ Conclusion pratique :
 - l'agent RCA peut desormais interroger un backend de logs reel aligne avec la stack live
 - le point restant n'est plus l'absence de logs, mais la qualite et la representativite du scenario RCA teste
 
+Validation live complementaire du 2026-04-14 :
+
+- le tool `query_opensearch_logs` retourne maintenant bien des logs live pour `productcatalogservice`
+- le tool `query_jaeger_traces` retourne maintenant bien des traces live pour `frontendproxy`
+- le tool `query_prometheus_metrics` reste un follow-up separe : le backend Prometheus contient des series utiles, mais le scenario RCA n'est pas encore suffisamment stable pour appeler cela une validation metriques bout en bout
+
+Conclusion MVP :
+
+- la plateforme valide maintenant un RCA MVP sur `code + logs + traces`
+- la partie `metrics` reste explicitement suivie a part
+
 ## Peut-on faire un vrai mini test maintenant ?
 
 Oui, a condition de choisir un service encore vivant dans `otel-demo`.
@@ -166,4 +177,4 @@ Pour un vrai mini corpus :
    - que les traces sont visibles dans le backend de traces choisi
 4. Lancer `/query/rca` avec une question liee a ce service et a cette fenetre de trafic precise.
 
-Le prochain mini test pertinent peut maintenant viser une vraie correlation `code + logs + metriques + traces` sur un service actif comme `frontendproxy`.
+Le prochain mini test pertinent peut maintenant viser une vraie correlation `code + logs + metriques + traces` une fois le follow-up metrics ferme.

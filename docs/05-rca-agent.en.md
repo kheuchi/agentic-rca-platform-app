@@ -115,3 +115,19 @@ The final LLM call produces:
 ---
 
 Next: [Phase 6 - MCP future](./06-mcp-future.en.md)
+
+---
+
+## Live Validation Status
+
+MVP validation was achieved on 2026-04-14:
+
+- `search_code_vectors` is validated on `frontendproxy`
+- `query_opensearch_logs` is validated on `productcatalogservice`
+- `query_jaeger_traces` is validated on `frontendproxy`
+- `/query/rca` is now stable and no longer restarts `rag-backend`
+
+Known limits:
+
+- `query_prometheus_metrics` remains a separate follow-up
+- the slim `otel-demo` deployment still does not expose one single service with clean `code + logs + metrics + traces` coverage for a full RCA test on one target

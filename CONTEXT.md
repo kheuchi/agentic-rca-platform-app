@@ -3,7 +3,17 @@
 > Ce fichier est la source de vérité du projet. Mis à jour à chaque fin de phase.
 > Il est dupliqué sur les 3 repos. Quand tu ouvres une nouvelle session Claude, dis-lui de lire ce fichier.
 
-## Dernière mise à jour : 2026-04-13
+## Update 2026-04-14
+
+- Phase `4.5d` est maintenant valide en mode MVP sur `code + logs + traces`
+- Alignement RCA live confirme sur `OpenSearch + Prometheus + Jaeger`
+- Validations live obtenues :
+  - code search Firestore sur `frontendproxy`
+  - logs OpenSearch sur `productcatalogservice`
+  - traces Jaeger sur `frontendproxy`
+- Follow-up explicite ouvert : qualite du signal metriques Prometheus pour RCA
+- Prochaine phase active : `4.6` validation du fallback `Azure OpenAI -> Vertex AI`
+## Dernière mise à jour : 2026-04-14
 
 ## Architecture globale
 
@@ -65,7 +75,7 @@ JAEGER_URL=http://otel-demo-jaeger-query.otel-demo.svc.cluster.local:16686
 | 4.5b — GitOps : env vars + OTel Demo + KEDA fix | gitops | ✅ Done 2026-03-29 |
 | 4.5c — Swap Azure AI Search → Firestore dans le code | app | ✅ Done 2026-03-29 |
 | **4.5d — e2e smoke test** | **app** | **✅ Done 2026-04-13** |
-| 4.6 — Multi-cloud validation (Vertex AI fallback) | app | ⏳ Ready to start |
+| 4.6 — Multi-cloud validation (Vertex AI fallback) | app | ⏳ In progress |
 | 5 — Langfuse + Kubecost | tous | ⬜ Pending |
 | 6 — RAG + MCP hybride (navigation code live) | app | ⬜ Planned |
 
@@ -186,3 +196,4 @@ Le choix du RAG (et non MCP pur) repose sur :
 - `wsl` prefix pour toutes les commandes CLI (az, gcloud, kubectl, terraform)
 - Secrets K8s via `kubectl create secret` — jamais dans git
 - Platform Helm apps (`argocd/apps/*.yaml`) : `kubectl apply` manuel, pas via ArgoCD gitops
+
