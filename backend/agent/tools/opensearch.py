@@ -128,7 +128,8 @@ async def query_opensearch_logs(
     }
 
     base_url = settings.opensearch_url.rstrip("/")
-    url = f"{base_url}/otel*/_search"
+    # Support both the custom otel* pattern and the default SS4O data stream pattern.
+    url = f"{base_url}/otel*,ss4o_logs*/_search"
     async with httpx.AsyncClient() as client:
         try:
             resp = await client.post(url, json=body, timeout=30)
@@ -137,7 +138,7 @@ async def query_opensearch_logs(
         except HTTPStatusError as exc:
             if exc.response.status_code == 404:
                 logger.info(
-                    "OpenSearch index pattern otel* not found; returning no log results"
+                    "OpenSearch log index patterns otel* and ss4o_logs* not found; returning no log results"
                 )
                 return []
             raise
