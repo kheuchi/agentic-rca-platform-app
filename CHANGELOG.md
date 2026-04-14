@@ -1,3 +1,10 @@
+## [1.7.3](https://github.com/kheuchi/rag-platform-app/compare/v1.7.2...v1.7.3) (2026-04-14)
+
+
+### Bug Fixes
+
+* support k8s-enriched opensearch logs ([#11](https://github.com/kheuchi/rag-platform-app/issues/11)) ([cdf5b40](https://github.com/kheuchi/rag-platform-app/commit/cdf5b40da9f62de4438a0be100fde571a04a1717))
+
 ## [1.7.2](https://github.com/kheuchi/rag-platform-app/compare/v1.7.1...v1.7.2) (2026-04-14)
 
 
