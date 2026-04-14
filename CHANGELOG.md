@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/kheuchi/rag-platform-app/compare/v1.7.0...v1.7.1) (2026-04-14)
+
+
+### Bug Fixes
+
+* harden jaeger and opensearch RCA tools ([#8](https://github.com/kheuchi/rag-platform-app/issues/8)) ([467054e](https://github.com/kheuchi/rag-platform-app/commit/467054e84ff594f358269ad1474c3fdb7f97d8b2))
+
 # [1.7.0](https://github.com/kheuchi/rag-platform-app/compare/v1.6.3...v1.7.0) (2026-04-14)
 
 
