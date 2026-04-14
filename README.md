@@ -25,6 +25,7 @@ The technical documentation is available in both languages.
 | Step 4 - Vector query | [docs/04-query-vector.en.md](docs/04-query-vector.en.md) | [docs/04-query-vector.md](docs/04-query-vector.md) |
 | Step 5 - RCA agent | [docs/05-rca-agent.en.md](docs/05-rca-agent.en.md) | [docs/05-rca-agent.md](docs/05-rca-agent.md) |
 | Phase 6 - MCP future | [docs/06-mcp-future.en.md](docs/06-mcp-future.en.md) | [docs/06-mcp-future.md](docs/06-mcp-future.md) |
+| Current `otel-demo` state | [docs/07-otel-demo-current-state.en.md](docs/07-otel-demo-current-state.en.md) | [docs/07-otel-demo-current-state.md](docs/07-otel-demo-current-state.md) |
 
 ## Runtime architecture
 
@@ -41,7 +42,7 @@ flowchart LR
     firestore[Firestore\ncode-chunks]
     redis[Azure Redis]
     agent[LangGraph RCA Agent]
-    obs[Loki + Prometheus + Tempo]
+    obs[OpenSearch + Prometheus + Jaeger]
 
     user -->|/ingest/repo| backend
     user -->|/query| backend
@@ -66,9 +67,9 @@ flowchart LR
 The RCA agent does not read logs, metrics, or traces from buckets, PVCs, or raw databases directly.
 
 It queries the observability backends through their HTTP APIs:
-- logs: Loki HTTP API with LogQL, via `backend/agent/tools/loki.py`
+- logs: OpenSearch HTTP API, via `backend/agent/tools/opensearch.py`
 - metrics: Prometheus HTTP API with PromQL, via `backend/agent/tools/prometheus.py`
-- traces: Tempo HTTP API, via `backend/agent/tools/tempo.py`
+- traces: Jaeger HTTP API, via `backend/agent/tools/jaeger.py`
 
 In the current AKS deployment, those services run in the `otel-demo` namespace. The agent talks to the observability systems, not to their underlying storage layer.
 
@@ -83,10 +84,10 @@ Cluster verification on 2026-04-13 showed:
 
 So, in the current environment, Prometheus metrics are physically stored on ephemeral node-backed pod storage and are lost if the pod is recreated.
 
-For Loki and Tempo:
-- the backend is configured to call `otel-demo-loki` and `otel-demo-tempo`
-- those services were not present in the namespace at the time of verification
-- because of that, their physical storage mode could not be confirmed from running workloads during this check
+For OpenSearch and Jaeger:
+- the OpenTelemetry demo stack is configured to route logs to OpenSearch and traces to Jaeger
+- those backends were misaligned or missing from the live namespace during the 2026-04-14 verification
+- the application and GitOps repos are now aligned on `OpenSearch + Prometheus + Jaeger`; deployment sync is still required for the cluster to match that desired state
 
 ## Why this design
 

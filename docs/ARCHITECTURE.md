@@ -21,9 +21,9 @@ flowchart LR
     vertex[Vertex AI\nfallback]
     firestore[Firestore\ncollection: code-chunks]
     redis[Azure Redis\njob status cache]
-    loki[Loki]
+    opensearch[OpenSearch]
     prom[Prometheus]
-    tempo[Tempo]
+    jaeger[Jaeger]
     agent[LangGraph RCA Agent]
 
     user -->|POST /ingest/repo| backend
@@ -45,9 +45,9 @@ flowchart LR
     agent -->|LLM reasoning| aoai_llm
     agent -->|LLM fallback| vertex
     agent -->|search code vectors| firestore
-    agent -->|query logs| loki
+    agent -->|query logs| opensearch
     agent -->|query metrics| prom
-    agent -->|query traces| tempo
+    agent -->|query traces| jaeger
 ```
 
 ## Ingestion Flow
@@ -85,9 +85,9 @@ flowchart TD
 
     rca --> plan[Plan search strategy]
     plan --> code[Search code vectors]
-    plan --> logs[Query Loki]
+    plan --> logs[Query OpenSearch]
     plan --> metrics[Query Prometheus]
-    plan --> traces[Query Tempo]
+    plan --> traces[Query Jaeger]
     code --> correlate[Correlate evidence]
     logs --> correlate
     metrics --> correlate
@@ -103,7 +103,7 @@ flowchart TD
 - Firestore stores embedded code chunks and serves vector search.
 - The backend orchestrates query and RCA requests.
 - The worker handles asynchronous ingestion.
-- Loki, Prometheus, and Tempo provide runtime observability evidence to the RCA agent.
+- OpenSearch, Prometheus, and Jaeger provide runtime observability evidence to the RCA agent.
 - Redis is optional and only used for ingest job status tracking.
 
 ## Protocol Notes
@@ -113,7 +113,7 @@ flowchart TD
 - `backend/agent -> Azure OpenAI` for chat: HTTPS requests to the Azure OpenAI REST API.
 - `worker -> Firestore` for vector storage: Google Cloud Firestore client calls, implemented over Google APIs/gRPC by the SDK.
 - `backend -> Firestore` for vector search: same Firestore client path, via the Google SDK.
-- `agent -> Loki / Prometheus / Tempo`: HTTP API calls (`LogQL`, `PromQL`, `TraceQL` queries, depending on the backend).
+- `agent -> OpenSearch / Prometheus / Jaeger`: HTTP API calls against the observability service APIs.
 - `backend/worker -> Redis`: Redis protocol via the async Redis client, when Redis is available.
 
 ## Observability data sources
@@ -121,14 +121,14 @@ flowchart TD
 The RCA agent does not query buckets, PVCs, or raw databases for observability data.
 
 It calls:
-- Loki over its HTTP API for logs
+- OpenSearch over its HTTP API for logs
 - Prometheus over its HTTP API for metrics
-- Tempo over its HTTP API for traces
+- Jaeger over its HTTP API for traces
 
 Those calls are implemented in:
-- [backend/agent/tools/loki.py](../backend/agent/tools/loki.py)
+- [backend/agent/tools/opensearch.py](../backend/agent/tools/opensearch.py)
 - [backend/agent/tools/prometheus.py](../backend/agent/tools/prometheus.py)
-- [backend/agent/tools/tempo.py](../backend/agent/tools/tempo.py)
+- [backend/agent/tools/jaeger.py](../backend/agent/tools/jaeger.py)
 
 ## Physical storage in the current cluster
 
@@ -140,8 +140,8 @@ Observed in AKS on 2026-04-13:
 
 That means the currently visible Prometheus metrics are stored on ephemeral pod storage, not on a persistent disk claim.
 
-For Loki and Tempo, the backend is configured to query:
-- `otel-demo-loki`
-- `otel-demo-tempo`
+For logs and traces, the backend is configured to query:
+- `otel-demo-opensearch`
+- `otel-demo-jaeger-query`
 
 However, those services were not present in the namespace during verification, so their physical storage backend could not be confirmed from live resources at that moment.

@@ -47,9 +47,9 @@ GCP_PROJECT_ID=mon-rag-perso-2026
 FIRESTORE_DATABASE=(default)
 FIRESTORE_COLLECTION=code-chunks
 GCP_LOCATION=us-central1
-LOKI_URL=http://otel-demo-loki.otel-demo.svc.cluster.local:3100
+OPENSEARCH_URL=http://otel-demo-opensearch.otel-demo.svc.cluster.local:9200
 PROMETHEUS_URL=http://otel-demo-prometheus-server.otel-demo.svc.cluster.local:9090
-TEMPO_URL=http://otel-demo-tempo.otel-demo.svc.cluster.local:3200
+JAEGER_URL=http://otel-demo-jaeger-query.otel-demo.svc.cluster.local:16686
 ```
 
 ## Phases

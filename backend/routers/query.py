@@ -30,7 +30,7 @@ class RCAQueryRequest(BaseModel):
 
 @router.post("/query")
 async def query(req: QueryRequest):
-    """Simple vector search against Azure AI Search."""
+    """Simple vector search against Firestore."""
     results = await search_code_vectors.ainvoke({
         "query": req.query,
         "service_filter": req.service_filter,
