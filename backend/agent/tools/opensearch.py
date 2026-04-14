@@ -13,6 +13,21 @@ from config import settings
 logger = logging.getLogger(__name__)
 
 
+def _normalize_k8s_workload_name(value: str) -> str:
+    if not value:
+        return ""
+    normalized = value
+    if normalized.startswith("otel-demo-"):
+        normalized = normalized[len("otel-demo-") :]
+
+    parts = normalized.split("-")
+    if len(parts) >= 3:
+        # Pod names often end with deployment hash + pod suffix.
+        normalized = "-".join(parts[:-2])
+
+    return normalized
+
+
 def _extract_log_message(source: dict) -> str:
     """Best-effort extraction across common OpenTelemetry/OpenSearch log shapes."""
     for key in ("body", "message", "log", "msg"):
@@ -49,7 +64,38 @@ def _extract_service_name(source: dict) -> str:
         if isinstance(value, str) and value:
             return value
 
+    resource = source.get("resource", {})
+    if isinstance(resource, dict):
+        for key in (
+            "k8s.deployment.name",
+            "k8s.statefulset.name",
+            "k8s.daemonset.name",
+            "k8s.container.name",
+            "k8s.pod.name",
+        ):
+            value = resource.get(key)
+            if isinstance(value, str) and value:
+                normalized = _normalize_k8s_workload_name(value)
+                if normalized:
+                    return normalized
+
     return "unknown"
+
+
+def _service_filter_clauses(service_name: str) -> list[dict]:
+    prefixed = f"otel-demo-{service_name}"
+    return [
+        {"term": {"resource.service.name.keyword": service_name}},
+        {"term": {"service.name.keyword": service_name}},
+        {"term": {"serviceName.keyword": service_name}},
+        {"term": {"attributes.service.name.keyword": service_name}},
+        {"term": {"resource.k8s.deployment.name.keyword": prefixed}},
+        {"term": {"resource.k8s.statefulset.name.keyword": prefixed}},
+        {"term": {"resource.k8s.daemonset.name.keyword": prefixed}},
+        {"term": {"resource.k8s.container.name.keyword": service_name}},
+        {"wildcard": {"resource.k8s.pod.name.keyword": f"*{service_name}*"}},
+        {"wildcard": {"attributes.log.file.path.keyword": f"*{service_name}*"}},
+    ]
 
 
 @tool
@@ -105,12 +151,7 @@ async def query_opensearch_logs(
         filters.append(
             {
                 "bool": {
-                    "should": [
-                        {"term": {"resource.service.name.keyword": service_name}},
-                        {"term": {"service.name.keyword": service_name}},
-                        {"term": {"serviceName.keyword": service_name}},
-                        {"term": {"attributes.service.name.keyword": service_name}},
-                    ],
+                    "should": _service_filter_clauses(service_name),
                     "minimum_should_match": 1,
                 }
             }
