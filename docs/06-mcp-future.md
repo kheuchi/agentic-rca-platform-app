@@ -60,7 +60,7 @@ flowchart TD
     RAG -->|chunks pertinents| AG
     MCP -->|fichiers complets, historique, doc| AG
 
-    AG --> OBS["Hot path — Étape 5\nLoki + Prometheus + Tempo"]
+    AG --> OBS["Hot path — Étape 5\nOpenSearch + Prometheus + Jaeger"]
     OBS --> AG
 
     AG --> R[Rapport RCA complet]
@@ -69,7 +69,7 @@ flowchart TD
 **Le flux hybride :**
 1. L'agent utilise **RAG** pour identifier les zones de code pertinentes rapidement (~100ms, cross-repo)
 2. Il utilise **MCP** pour lire les fichiers complets des zones identifiées, naviguer dans l'arborescence adjacente, consulter git blame sur les lignes suspectes
-3. Il utilise les **tools observabilité** (Loki, Prometheus, Tempo) pour les signaux live
+3. Il utilise les **tools observabilité** (OpenSearch, Prometheus, Jaeger) pour les signaux live
 
 ---
 
@@ -93,9 +93,9 @@ L'agent actuel (étape 5) a 4 tools :
 
 ```
 search_code_vectors   ← RAG (Firestore)
-query_loki_logs       ← HTTP Loki
+query_opensearch_logs ← HTTP OpenSearch
 query_prometheus_metrics ← HTTP Prometheus
-query_tempo_traces    ← HTTP Tempo
+query_jaeger_traces   ← HTTP Jaeger
 ```
 
 En Phase 6, le `plan_search` node pourrait décider d'appeler des tools MCP supplémentaires :
@@ -105,9 +105,9 @@ search_code_vectors        ← RAG — inchangé
 read_file                  ← MCP filesystem — nouveau
 git_blame                  ← MCP git — nouveau
 get_confluence_page        ← MCP confluence — nouveau
-query_loki_logs            ← HTTP Loki — inchangé
+query_opensearch_logs      ← HTTP OpenSearch — inchangé
 query_prometheus_metrics   ← HTTP Prometheus — inchangé
-query_tempo_traces         ← HTTP Tempo — inchangé
+query_jaeger_traces        ← HTTP Jaeger — inchangé
 ```
 
 Le graphe LangGraph n'a pas besoin de changer — juste étendre la `tool_map` dans `execute_tools` avec les nouveaux tools MCP.

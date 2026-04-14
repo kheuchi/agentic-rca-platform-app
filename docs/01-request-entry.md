@@ -125,9 +125,9 @@ class Settings(BaseSettings):
     gcp_project_id: str = ""
     gcp_location: str = "us-central1"
 
-    loki_url: str = "http://loki:3100"
+    opensearch_url: str = "http://opensearch:9200"
     prometheus_url: str = "http://prometheus:9090"
-    tempo_url: str = "http://tempo:3200"
+    jaeger_url: str = "http://jaeger-query:16686"
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 ```
@@ -138,7 +138,7 @@ Dans le cluster AKS (namespace `rag-dev`), ces variables sont injectées par le 
 |---|---|
 | Secret `rag-ai-secrets` | `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY` |
 | Secret `rag-backend-secrets` | `REDIS_HOST`, `REDIS_KEY` |
-| ConfigMap / env directs | `NATS_URL`, `GCP_PROJECT_ID`, `FIRESTORE_*`, `LOKI_URL`, etc. |
+| ConfigMap / env directs | `NATS_URL`, `GCP_PROJECT_ID`, `FIRESTORE_*`, `OPENSEARCH_URL`, `PROMETHEUS_URL`, `JAEGER_URL`, etc. |
 
 En local : un fichier `.env` à la racine de `backend/` suffit (jamais commité).
 

@@ -165,7 +165,7 @@ resp = await llm.ainvoke([
 ])
 # Réponse attendue du LLM :
 # {"tools": [
-#   {"name": "query_loki_logs",   "args": {"logql_query": "...", "lookback_minutes": 60}},
+#   {"name": "query_opensearch_logs", "args": {"service_name": "frontendproxy", "query_string": "error OR timeout", "lookback_minutes": 60}},
 #   {"name": "search_code_vectors", "args": {"query": "...", "service_filter": "checkoutservice"}}
 # ], "ready": false}
 ```
@@ -185,9 +185,9 @@ Exécute chaque outil du plan dans l'ordre. Les résultats vont dans les bonnes 
 ```python
 tool_map = {
     "search_code_vectors":    search_code_vectors,    # → code_context
-    "query_loki_logs":        query_loki_logs,         # → log_findings
+    "query_opensearch_logs":  query_opensearch_logs,   # → log_findings
     "query_prometheus_metrics": query_prometheus_metrics, # → metric_findings
-    "query_tempo_traces":     query_tempo_traces,      # → trace_findings
+    "query_jaeger_traces":    query_jaeger_traces,     # → trace_findings
 }
 
 for call in tool_calls:
@@ -200,26 +200,26 @@ Les 4 tools et ce qu'ils interrogent :
 | Tool | Fichier | Source de données | Langage de requête |
 |------|---------|-------------------|--------------------|
 | `search_code_vectors` | `backend/agent/tools/code_search.py` | GCP Firestore | vecteurs — langage naturel |
-| `query_loki_logs` | `backend/agent/tools/loki.py` | Loki (logs) | LogQL |
+| `query_opensearch_logs` | `backend/agent/tools/opensearch.py` | OpenSearch (logs) | query API |
 | `query_prometheus_metrics` | `backend/agent/tools/prometheus.py` | Prometheus (métriques) | PromQL |
-| `query_tempo_traces` | `backend/agent/tools/tempo.py` | Tempo (traces) | TraceQL |
+| `query_jaeger_traces` | `backend/agent/tools/jaeger.py` | Jaeger (traces) | Jaeger HTTP API |
 
 ```mermaid
 flowchart LR
     ET[execute_tools] --> T1["search_code_vectors\n→ Firestore\n→ code_context"]
-    ET --> T2["query_loki_logs\n→ Loki /query_range\n→ log_findings"]
+    ET --> T2["query_opensearch_logs\n→ OpenSearch /_search\n→ log_findings"]
     ET --> T3["query_prometheus_metrics\n→ Prometheus /query_range\n→ metric_findings"]
-    ET --> T4["query_tempo_traces\n→ Tempo /api/search\n→ trace_findings"]
+    ET --> T4["query_jaeger_traces\n→ Jaeger /api/traces\n→ trace_findings"]
 ```
 
-Chaque tool fait un appel HTTP direct à son backend (Loki, Prometheus, Tempo tournent dans le namespace `otel-demo` du cluster). Si un tool échoue, l'agent continue avec les autres — l'erreur est loggée et ajoutée aux messages du state.
+Chaque tool fait un appel HTTP direct à son backend. Dans l'architecture ciblée, les signaux live viennent de `OpenSearch`, `Prometheus` et `Jaeger` dans le namespace `otel-demo`. Si un tool échoue, l'agent continue avec les autres — l'erreur est loggée et ajoutée aux messages du state.
 
 **Où vivent physiquement ces données ?**
 
-- L'agent **ne lit pas** un bucket, un PVC ou une base brute directement ; il interroge les APIs HTTP de Loki, Prometheus et Tempo.
+- L'agent **ne lit pas** un bucket, un PVC ou une base brute directement ; il interroge les APIs HTTP de OpenSearch, Prometheus et Jaeger.
 - Vérification cluster du `2026-04-13` : `otel-demo-prometheus-server` stocke sa TSDB dans `/data`, monté sur un volume `EmptyDir`.
 - Il n'y avait **aucun PVC** ni **aucun StatefulSet** visible dans le namespace `otel-demo`, donc les métriques Prometheus actuellement visibles sont sur du stockage éphémère de pod.
-- Le backend est configuré pour appeler `otel-demo-loki` et `otel-demo-tempo`, mais ces services n'étaient pas présents dans le namespace au moment du contrôle ; leur stockage physique n'a donc pas pu être confirmé depuis les workloads actifs.
+- Le backend et les manifests GitOps ont été réalignés sur `otel-demo-opensearch`, `otel-demo-prometheus-server` et `otel-demo-jaeger-query`, qui correspondent à la stack OpenTelemetry Demo configurée.
 
 ---
 
@@ -325,4 +325,4 @@ Si **Langfuse** est configuré (`LANGFUSE_PUBLIC_KEY`), chaque appel LLM est tra
 | Graphe | `backend/agent/graph.py` | Définit les transitions entre nodes | — |
 | State | `backend/agent/state.py` | Données circulant entre nodes | — |
 | LLM | `backend/llm/providers.py` | gpt-4o (primary) + gemini-1.5-pro (fallback) | — |
-| Tools | `backend/agent/tools/` | Firestore, Loki, Prometheus, Tempo | — |
+| Tools | `backend/agent/tools/` | Firestore, OpenSearch, Prometheus, Jaeger | — |

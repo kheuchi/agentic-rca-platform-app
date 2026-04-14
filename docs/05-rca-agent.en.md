@@ -62,18 +62,18 @@ It returns a JSON plan of tool calls.
 
 Current tool map:
 - `search_code_vectors` -> Firestore
-- `query_loki_logs` -> Loki HTTP API
+- `query_opensearch_logs` -> OpenSearch HTTP API
 - `query_prometheus_metrics` -> Prometheus HTTP API
-- `query_tempo_traces` -> Tempo HTTP API
+- `query_jaeger_traces` -> Jaeger HTTP API
 
 Important clarification:
 - the agent does not read logs, metrics, or traces from buckets, PVCs, or raw databases
-- it calls Loki, Prometheus, and Tempo through their service APIs inside the cluster
+- it calls OpenSearch, Prometheus, and Jaeger through their service APIs inside the cluster
 
 Physical storage, as verified on 2026-04-13:
 - Prometheus stores data in `/data` on an `EmptyDir` volume inside `otel-demo-prometheus-server`
 - no PVC-backed observability storage was visible in `otel-demo`
-- Loki and Tempo URLs are configured, but their services were not present during this verification, so their physical storage could not be confirmed from live resources
+- the repos now target OpenSearch and Jaeger for logs and traces, but the live cluster still needs to converge to that desired state before the RCA path can use them reliably
 
 ## Node 3 - `correlate_findings`
 
@@ -107,7 +107,7 @@ The final LLM call produces:
 | Node | Role | LLM |
 |---|---|---|
 | `plan_search` | decide tool calls | yes |
-| `execute_tools` | run Firestore, Loki, Prometheus, Tempo tools | no |
+| `execute_tools` | run Firestore, OpenSearch, Prometheus, and Jaeger tools | no |
 | `correlate_findings` | analyze evidence | yes |
 | `synthesize_root_cause` | write final RCA | yes |
 | `should_continue` | route loop vs finish | no |

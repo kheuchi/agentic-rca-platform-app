@@ -19,9 +19,9 @@ flowchart LR
     vertex[Vertex AI\nfallback]
     firestore[Firestore\ncollection: code-chunks]
     redis[Azure Redis\ncache de statut]
-    loki[Loki]
+    opensearch[OpenSearch]
     prom[Prometheus]
-    tempo[Tempo]
+    jaeger[Jaeger]
     agent[Agent RCA LangGraph]
 
     user -->|POST /ingest/repo| backend
@@ -43,9 +43,9 @@ flowchart LR
     agent -->|raisonnement LLM| aoai_llm
     agent -->|fallback LLM| vertex
     agent -->|recherche de code| firestore
-    agent -->|requete logs| loki
+    agent -->|requete logs| opensearch
     agent -->|requete metriques| prom
-    agent -->|requete traces| tempo
+    agent -->|requete traces| jaeger
 ```
 
 ## Sources observabilite
@@ -53,14 +53,14 @@ flowchart LR
 L'agent RCA ne lit pas les logs, metriques ou traces depuis des buckets, des PVC ou des bases de donnees brutes.
 
 Il interroge directement les API HTTP de :
-- Loki pour les logs
+- OpenSearch pour les logs
 - Prometheus pour les metriques
-- Tempo pour les traces
+- Jaeger pour les traces
 
 Ces appels sont implementes dans :
-- [backend/agent/tools/loki.py](../backend/agent/tools/loki.py)
+- [backend/agent/tools/opensearch.py](../backend/agent/tools/opensearch.py)
 - [backend/agent/tools/prometheus.py](../backend/agent/tools/prometheus.py)
-- [backend/agent/tools/tempo.py](../backend/agent/tools/tempo.py)
+- [backend/agent/tools/jaeger.py](../backend/agent/tools/jaeger.py)
 
 ## Stockage physique dans le cluster actuel
 
@@ -72,8 +72,8 @@ Observe dans AKS le 2026-04-13 :
 
 Cela signifie que les metriques Prometheus actuellement visibles sont stockees sur un stockage ephemere du pod, et non sur un disque persistant revendique via PVC.
 
-Pour Loki et Tempo, le backend est configure pour interroger :
-- `otel-demo-loki`
-- `otel-demo-tempo`
+Pour les logs et les traces, le backend est configure pour interroger :
+- `otel-demo-opensearch`
+- `otel-demo-jaeger-query`
 
 En revanche, ces services n'etaient pas presents dans le namespace au moment de la verification. Leur backend de stockage physique n'a donc pas pu etre confirme depuis les ressources actives.

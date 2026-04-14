@@ -15,9 +15,9 @@ You are an RCA (Root Cause Analysis) planner for a microservices application \
 (OpenTelemetry Astronomy Shop). You have access to these tools:
 
 - search_code_vectors: Search source code for relevant functions, error handlers, etc.
-- query_loki_logs: Query application logs via LogQL.
+- query_opensearch_logs: Query application logs via OpenSearch.
 - query_prometheus_metrics: Query metrics via PromQL (error rates, latency, saturation).
-- query_tempo_traces: Search distributed traces (errors, slow requests).
+- query_jaeger_traces: Search distributed traces (errors, slow requests).
 
 Given the user's question and any evidence gathered so far, decide which tools \
 to call next. Return a JSON object with a "tools" array. Each tool entry must \
@@ -28,7 +28,7 @@ If you already have sufficient evidence to identify the root cause, return \
 
 Example:
 {"tools": [
-  {"name": "query_loki_logs", "args": {"logql_query": "{service_name=\\"checkoutservice\\"} |= \\"error\\"", "lookback_minutes": 60}},
+  {"name": "query_opensearch_logs", "args": {"service_name": "frontendproxy", "query_string": "error OR exception", "lookback_minutes": 60}},
   {"name": "search_code_vectors", "args": {"query": "checkout error handling", "service_filter": "checkoutservice"}}
 ], "ready": false}
 """
@@ -157,22 +157,22 @@ async def plan_search(state: RCAState) -> dict:
 async def execute_tools(state: RCAState) -> dict:
     """Execute the tools decided by plan_search."""
     from agent.tools.code_search import search_code_vectors
-    from agent.tools.loki import query_loki_logs
+    from agent.tools.jaeger import query_jaeger_traces
+    from agent.tools.opensearch import query_opensearch_logs
     from agent.tools.prometheus import query_prometheus_metrics
-    from agent.tools.tempo import query_tempo_traces
 
     tool_map = {
         "search_code_vectors": search_code_vectors,
-        "query_loki_logs": query_loki_logs,
+        "query_opensearch_logs": query_opensearch_logs,
         "query_prometheus_metrics": query_prometheus_metrics,
-        "query_tempo_traces": query_tempo_traces,
+        "query_jaeger_traces": query_jaeger_traces,
     }
 
     result_key_map = {
         "search_code_vectors": "code_context",
-        "query_loki_logs": "log_findings",
+        "query_opensearch_logs": "log_findings",
         "query_prometheus_metrics": "metric_findings",
-        "query_tempo_traces": "trace_findings",
+        "query_jaeger_traces": "trace_findings",
     }
 
     plan = state.get("_plan", {})

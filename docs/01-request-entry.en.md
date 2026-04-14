@@ -67,7 +67,7 @@ Important detail:
 - Redis
 - Azure OpenAI
 - Firestore / GCP
-- Loki, Prometheus, Tempo URLs
+- OpenSearch, Prometheus, Jaeger URLs
 
 In AKS, those values come from deployment env vars and Kubernetes secrets.
 

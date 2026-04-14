@@ -25,15 +25,16 @@ La documentation technique est disponible dans les deux langues.
 | Etape 4 - requete vectorielle | [docs/04-query-vector.en.md](docs/04-query-vector.en.md) | [docs/04-query-vector.md](docs/04-query-vector.md) |
 | Etape 5 - agent RCA | [docs/05-rca-agent.en.md](docs/05-rca-agent.en.md) | [docs/05-rca-agent.md](docs/05-rca-agent.md) |
 | Phase 6 - futur MCP | [docs/06-mcp-future.en.md](docs/06-mcp-future.en.md) | [docs/06-mcp-future.md](docs/06-mcp-future.md) |
+| Etat actuel de `otel-demo` | [docs/07-otel-demo-current-state.en.md](docs/07-otel-demo-current-state.en.md) | [docs/07-otel-demo-current-state.md](docs/07-otel-demo-current-state.md) |
 
 ## Ou l'agent RCA cherche logs, metriques et traces
 
 L'agent RCA ne lit pas les logs, metriques ou traces directement dans des buckets, des PVC ou des bases de donnees.
 
 Il interroge les backends d'observabilite via leurs API HTTP :
-- logs : API HTTP Loki avec LogQL, via `backend/agent/tools/loki.py`
+- logs : API HTTP OpenSearch, via `backend/agent/tools/opensearch.py`
 - metriques : API HTTP Prometheus avec PromQL, via `backend/agent/tools/prometheus.py`
-- traces : API HTTP Tempo, via `backend/agent/tools/tempo.py`
+- traces : API HTTP Jaeger, via `backend/agent/tools/jaeger.py`
 
 Dans le deploiement AKS actuel, ces services tournent dans le namespace `otel-demo`. L'agent parle aux systemes d'observabilite, pas a leur couche de stockage sous-jacente.
 
@@ -48,10 +49,10 @@ La verification cluster du 2026-04-13 a montre que :
 
 Donc, dans l'environnement actuel, les metriques Prometheus sont physiquement stockees sur un stockage ephemere local au pod et sont perdues si le pod est recree.
 
-Pour Loki et Tempo :
-- le backend est configure pour appeler `otel-demo-loki` et `otel-demo-tempo`
-- ces services n'etaient pas presents dans le namespace au moment de la verification
-- leur mode de stockage physique n'a donc pas pu etre confirme a partir des workloads actifs pendant ce controle
+Pour OpenSearch et Jaeger :
+- la stack OpenTelemetry demo est configuree pour router les logs vers OpenSearch et les traces vers Jaeger
+- ces backends etaient absents ou desalignes dans le namespace live lors du controle du 2026-04-14
+- les repos applicatif et GitOps sont maintenant alignes sur `OpenSearch + Prometheus + Jaeger`, mais un redeploiement reste necessaire pour que le cluster converge vers cet etat voulu
 
 ## Architecture d'execution
 

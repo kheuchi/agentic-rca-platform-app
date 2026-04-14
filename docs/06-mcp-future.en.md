@@ -52,9 +52,9 @@ The likely change is to extend the tool map with MCP-backed tools such as:
 - `get_confluence_page`
 
 Existing observability tools would stay the same:
-- Loki
+- OpenSearch
 - Prometheus
-- Tempo
+- Jaeger
 
 ## Why MCP comes later
 

@@ -94,8 +94,8 @@ platform:
     backends:
       grafana: true
       prometheus: true
-      loki: true
-      tempo: true
+      opensearch: true
+      jaeger: true
     disabled_services: [accountingService, frauddetectionService, kafka, checkoutService, imageprovider]
 
   langfuse:
@@ -132,7 +132,7 @@ application:
       - GCP Firestore (vector search)
       - Azure OpenAI (chat LLM + embeddings)
       - Vertex AI (chat LLM fallback)
-      - Loki, Prometheus, Tempo (hot path observability tools)
+      - OpenSearch, Prometheus, Jaeger (hot path observability tools)
 
   worker:
     name: rag-worker
@@ -158,9 +158,9 @@ application:
     flow: plan_search -> execute_tools -> correlate_findings -> synthesize_root_cause
     tools:
       - search_code_vectors (Firestore)
-      - query_loki_logs (Loki LogQL)
+      - query_opensearch_logs (OpenSearch query API)
       - query_prometheus_metrics (Prometheus PromQL)
-      - query_tempo_traces (Tempo TraceQL)
+      - query_jaeger_traces (Jaeger trace API)
     max_iterations: 8
     llm: Azure OpenAI gpt-4o (primary) + Vertex AI gemini-1.5-pro (fallback)
 

@@ -83,10 +83,10 @@
         <mxCell id="agent" value="LangGraph RCA Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="645" y="396" width="220" height="70" as="geometry"/>
         </mxCell>
-        <mxCell id="loki_icon" value="L" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+        <mxCell id="loki_icon" value="OS" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=14;" vertex="1" parent="1">
           <mxGeometry x="890" y="430" width="36" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="loki" value="Loki" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+        <mxCell id="loki" value="OpenSearch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
           <mxGeometry x="935" y="418" width="120" height="60" as="geometry"/>
         </mxCell>
         <mxCell id="prom_icon" value="P" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=18;" vertex="1" parent="1">
@@ -95,10 +95,10 @@
         <mxCell id="prom" value="Prometheus" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
           <mxGeometry x="1085" y="418" width="140" height="60" as="geometry"/>
         </mxCell>
-        <mxCell id="tempo_icon" value="T" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+        <mxCell id="tempo_icon" value="J" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=18;" vertex="1" parent="1">
           <mxGeometry x="890" y="510" width="36" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="tempo" value="Tempo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+        <mxCell id="tempo" value="Jaeger" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
           <mxGeometry x="935" y="498" width="120" height="60" as="geometry"/>
         </mxCell>
 

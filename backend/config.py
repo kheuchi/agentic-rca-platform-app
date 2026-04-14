@@ -27,9 +27,9 @@ class Settings(BaseSettings):
     gcp_location: str = "us-central1"
 
     # Observability backends (hot path)
-    loki_url: str = "http://loki:3100"
+    opensearch_url: str = "http://opensearch:9200"
     prometheus_url: str = "http://prometheus:9090"
-    tempo_url: str = "http://tempo:3200"
+    jaeger_url: str = "http://jaeger-query:16686"
 
     # Langfuse (LLM observability)
     langfuse_public_key: str = ""
