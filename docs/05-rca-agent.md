@@ -326,3 +326,19 @@ Si **Langfuse** est configuré (`LANGFUSE_PUBLIC_KEY`), chaque appel LLM est tra
 | State | `backend/agent/state.py` | Données circulant entre nodes | — |
 | LLM | `backend/llm/providers.py` | gpt-4o (primary) + gemini-1.5-pro (fallback) | — |
 | Tools | `backend/agent/tools/` | Firestore, OpenSearch, Prometheus, Jaeger | — |
+
+---
+
+## Etat de validation live
+
+Validation MVP obtenue le 2026-04-14 :
+
+- `search_code_vectors` valide sur `frontendproxy`
+- `query_opensearch_logs` valide sur `productcatalogservice`
+- `query_jaeger_traces` valide sur `frontendproxy`
+- `/query/rca` est stable et ne fait plus redemarrer `rag-backend`
+
+Limites connues :
+
+- `query_prometheus_metrics` reste un follow-up separe
+- le cluster `otel-demo` slim ne fournit pas encore un service unique qui expose proprement `code + logs + metrics + traces` pour un test RCA complet sur une seule cible
