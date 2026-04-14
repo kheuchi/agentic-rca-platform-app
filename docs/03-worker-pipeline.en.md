@@ -60,8 +60,8 @@ Chunk IDs are deterministic, which makes reindexing idempotent.
 ## Step 4 - Embed
 
 `worker/pipeline/embed.py` generates embeddings with:
-- Azure OpenAI first
-- Vertex AI fallback
+- `EMBEDDING_PROVIDER_STRATEGY=fallback`: Azure OpenAI first, Vertex AI on error
+- `EMBEDDING_PROVIDER_STRATEGY=switch` with `EMBEDDING_SWITCH_PROVIDER=vertex`: force Vertex AI directly
 
 Embeddings are produced in batches of `16`.
 

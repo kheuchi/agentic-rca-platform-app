@@ -64,6 +64,7 @@ Un schema plus detaille est disponible dans [docs/ARCHITECTURE.fr.md](docs/ARCHI
 - Ingestion event-driven : le backend publie dans NATS et repond tout de suite.
 - Traitement decouple : le worker execute clone -> parse -> chunk -> embed -> store de facon asynchrone.
 - Multi-cloud : Azure OpenAI pour LLM/embeddings, Firestore pour la recherche vectorielle, Vertex AI en fallback.
+- Controle de provider : le backend et le worker supportent maintenant `fallback` et `switch` explicite entre Azure OpenAI et Vertex AI.
 - RCA : l'agent LangGraph combine recherche de code et observabilite live.
 - Separation claire : le code applicatif est ici, les manifests restent dans `rag-platform-gitops`.
 
@@ -116,6 +117,32 @@ docker run -p 4222:4222 nats:latest -js
 
 - Phase 4.5d : terminee, avec un MVP RCA valide sur `code + logs + traces`
 - Les metriques restent un follow-up dedie
-- Phase 4.6 : active, valider le fallback Vertex AI
+- Phase 4.6 : le mode `switch` est implemente et teste localement ; la validation live du fallback reste a faire
+
+## Strategie de provider
+
+Le runtime supporte maintenant deux strategies :
+- `fallback` : Azure OpenAI d'abord, Vertex AI seulement en cas d'erreur
+- `switch` : forcer explicitement le provider sans attendre une erreur
+
+Variables d'environnement :
+- `LLM_PROVIDER_STRATEGY=fallback|switch`
+- `LLM_SWITCH_PROVIDER=azure|vertex`
+- `EMBEDDING_PROVIDER_STRATEGY=fallback|switch`
+- `EMBEDDING_SWITCH_PROVIDER=azure|vertex`
+
+Exemple pour forcer Vertex AI dans `rag-dev` :
+
+```env
+LLM_PROVIDER_STRATEGY=switch
+LLM_SWITCH_PROVIDER=vertex
+EMBEDDING_PROVIDER_STRATEGY=switch
+EMBEDDING_SWITCH_PROVIDER=vertex
+```
+
+Etat de validation au 2026-04-14 :
+- la selection `switch` est couverte par des tests unitaires
+- un appel live Vertex reussi n'a pas encore ete valide
+- le fallback runtime sur erreur n'a pas encore ete valide
 - Phase 5 : en attente
 - Phase 6 : planifiee

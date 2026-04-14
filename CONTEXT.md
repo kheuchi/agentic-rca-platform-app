@@ -12,7 +12,9 @@
   - logs OpenSearch sur `productcatalogservice`
   - traces Jaeger sur `frontendproxy`
 - Follow-up explicite ouvert : qualite du signal metriques Prometheus pour RCA
-- Prochaine phase active : `4.6` validation du fallback `Azure OpenAI -> Vertex AI`
+- Phase `4.6` a maintenant un mode `switch` explicite pour chat + embeddings
+- Validation obtenue : selection `switch` Azure/Vertex dans le code et les tests unitaires
+- Validation restante : fallback runtime `Azure OpenAI -> Vertex AI` en cluster
 ## Dernière mise à jour : 2026-04-14
 
 ## Architecture globale
@@ -60,6 +62,10 @@ GCP_LOCATION=us-central1
 OPENSEARCH_URL=http://otel-demo-opensearch.otel-demo.svc.cluster.local:9200
 PROMETHEUS_URL=http://otel-demo-prometheus-server.otel-demo.svc.cluster.local:9090
 JAEGER_URL=http://otel-demo-jaeger-query.otel-demo.svc.cluster.local:16686
+LLM_PROVIDER_STRATEGY=switch
+LLM_SWITCH_PROVIDER=vertex
+EMBEDDING_PROVIDER_STRATEGY=switch
+EMBEDDING_SWITCH_PROVIDER=vertex
 ```
 
 ## Phases
@@ -75,7 +81,7 @@ JAEGER_URL=http://otel-demo-jaeger-query.otel-demo.svc.cluster.local:16686
 | 4.5b — GitOps : env vars + OTel Demo + KEDA fix | gitops | ✅ Done 2026-03-29 |
 | 4.5c — Swap Azure AI Search → Firestore dans le code | app | ✅ Done 2026-03-29 |
 | **4.5d — e2e smoke test** | **app** | **✅ Done 2026-04-13** |
-| 4.6 — Multi-cloud validation (Vertex AI fallback) | app | ⏳ In progress |
+| 4.6 — Multi-cloud provider controls (`switch` + fallback) | app | ⏳ In progress |
 | 5 — Langfuse + Kubecost | tous | ⬜ Pending |
 | 6 — RAG + MCP hybride (navigation code live) | app | ⬜ Planned |
 
@@ -168,7 +174,7 @@ Validation complémentaire post-run :
 3. ✅ `store complete` obtenu sur le mini corpus
 4. ✅ `/query` retourne 3 résultats avec `service_filter=checkoutservice`
 5. ✅ `/query/rca` retourne un rapport RCA sans restart backend
-6. ⏭️ **Phase 4.6 — validation Vertex AI fallback** : provoquer/émuler le fallback Azure OpenAI → Vertex AI et vérifier la continuité des réponses LLM/embeddings
+6. ⏭️ **Phase 4.6 — validation provider strategy** : `switch` explicite maintenant livré pour chat + embeddings, reste à valider le fallback runtime Azure OpenAI → Vertex AI en cluster
 
 ## Décisions d'architecture
 

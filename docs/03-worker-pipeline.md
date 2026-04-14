@@ -223,7 +223,9 @@ flowchart LR
     AO --> V["Vecteurs\n1536 dims par chunk"]
 ```
 
-**Fallback Vertex AI :** si `AZURE_OPENAI_ENDPOINT` n'est pas configuré, le worker bascule sur `VertexAIEmbeddings` (`text-embedding-004` de Google). Même interface, même output.
+**Selection provider :** le worker supporte maintenant deux strategies :
+- `EMBEDDING_PROVIDER_STRATEGY=fallback` : Azure OpenAI d'abord, Vertex AI sur erreur
+- `EMBEDDING_PROVIDER_STRATEGY=switch` + `EMBEDDING_SWITCH_PROVIDER=vertex` : force Vertex AI sans attendre d'erreur
 
 **Pourquoi batch de 16 ?** L'API Azure OpenAI accepte plusieurs textes par appel. Batches de 16 = bon compromis entre nombre d'appels API (moins = plus rapide) et risque de rate limiting (429) sur le tier S0.
 
