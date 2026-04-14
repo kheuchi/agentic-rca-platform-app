@@ -95,6 +95,7 @@ For OpenSearch and Jaeger:
 - Event-driven ingestion: the backend publishes jobs to NATS and returns immediately.
 - Decoupled processing: the worker handles clone, parse, chunk, embed, and store asynchronously.
 - Multi-cloud setup: Azure OpenAI for LLM and embeddings, Firestore for vector search, Vertex AI as fallback.
+- Provider controls: the backend and worker now support `fallback` and explicit `switch` modes for Azure OpenAI vs Vertex AI.
 - RCA workflow: the LangGraph agent combines code search with live observability evidence.
 - GitOps-friendly deployment: application code stays here, manifests stay in `rag-platform-gitops`.
 
@@ -147,6 +148,32 @@ docker run -p 4222:4222 nats:latest -js
 
 - Phase 4.5d: done, with an RCA MVP validated on `code + logs + traces`
 - Metrics remain a dedicated follow-up item
-- Phase 4.6: now active, validate Vertex AI fallback
+- Phase 4.6: `switch` is implemented and tested locally; live fallback validation is still pending
+
+## Provider Strategy
+
+The runtime now supports two provider strategies:
+- `fallback`: Azure OpenAI first, Vertex AI only on error
+- `switch`: force the provider selection without waiting for an error
+
+Environment variables:
+- `LLM_PROVIDER_STRATEGY=fallback|switch`
+- `LLM_SWITCH_PROVIDER=azure|vertex`
+- `EMBEDDING_PROVIDER_STRATEGY=fallback|switch`
+- `EMBEDDING_SWITCH_PROVIDER=azure|vertex`
+
+Example to force Vertex AI in `rag-dev`:
+
+```env
+LLM_PROVIDER_STRATEGY=switch
+LLM_SWITCH_PROVIDER=vertex
+EMBEDDING_PROVIDER_STRATEGY=switch
+EMBEDDING_SWITCH_PROVIDER=vertex
+```
+
+Validation status on 2026-04-14:
+- `switch` selection is covered by unit tests
+- live Vertex API success has not been validated yet
+- live fallback-on-error has not been validated yet
 - Phase 5: pending
 - Phase 6: planned

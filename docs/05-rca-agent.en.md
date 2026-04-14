@@ -99,8 +99,8 @@ The final LLM call produces:
 ## LLM provider strategy
 
 `backend/llm/providers.py` returns:
-- Azure OpenAI `gpt-4o` as primary
-- Vertex AI as fallback
+- `fallback`: Azure OpenAI `gpt-4o` as primary, Vertex AI on error
+- `switch`: force Azure or Vertex explicitly with environment variables
 
 ## Summary
 

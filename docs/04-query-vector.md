@@ -78,7 +78,9 @@ query_embedding = await embed_model.aget_text_embedding(query)
 # → list[float] de 1536 valeurs
 ```
 
-`get_embedding_model()` retourne Azure OpenAI `text-embedding-3-small` en priorité, Vertex AI `text-embedding-004` en fallback — même logique que dans le worker.
+`get_embedding_model()` supporte maintenant deux modes :
+- `fallback` : Azure OpenAI `text-embedding-3-small` en priorité, Vertex AI `text-embedding-004` sur erreur
+- `switch` : sélection explicite Azure ou Vertex via variables d'environnement, comme dans le worker
 
 ```mermaid
 flowchart LR

@@ -36,8 +36,8 @@ async def query(req: QueryRequest):
 ## Query embedding
 
 `backend/llm/embeddings.py` embeds the query with:
-- Azure OpenAI first
-- Vertex AI fallback
+- `fallback`: Azure OpenAI first, Vertex AI on error
+- `switch`: explicit Azure or Vertex selection through environment variables
 
 The query and the indexed chunks must share the same embedding space.
 

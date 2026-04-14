@@ -295,7 +295,7 @@ resp = await llm.ainvoke([
 
 ---
 
-## 5.9 Le LLM utilisé — Azure OpenAI + fallback Vertex AI
+## 5.9 Le LLM utilisé — Azure OpenAI, Vertex AI, fallback et switch
 
 > `backend/llm/providers.py` — fonction `get_chat_llm`
 
@@ -307,6 +307,11 @@ fallback = ChatVertexAI(model_name="gemini-1.5-pro", ...)
 
 return primary.with_fallbacks([fallback])
 # Si Azure OpenAI → 429 ou erreur → LangChain bascule automatiquement sur Gemini
+
+# Ou bien, avec le mode switch :
+# LLM_PROVIDER_STRATEGY=switch
+# LLM_SWITCH_PROVIDER=vertex
+# -> le backend force Vertex AI sans attendre d'erreur
 ```
 
 Si **Langfuse** est configuré (`LANGFUSE_PUBLIC_KEY`), chaque appel LLM est tracé automatiquement via le callback LangChain — utile pour débugger les prompts et mesurer les coûts (Phase 5).
