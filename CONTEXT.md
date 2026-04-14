@@ -14,7 +14,13 @@
 - Follow-up explicite ouvert : qualite du signal metriques Prometheus pour RCA
 - Phase `4.6` a maintenant un mode `switch` explicite pour chat + embeddings
 - Validation obtenue : selection `switch` Azure/Vertex dans le code et les tests unitaires
-- Validation restante : fallback runtime `Azure OpenAI -> Vertex AI` en cluster
+- Test live Vertex 2026-04-14 : le backend et le worker resolvent bien `vertex` en mode `switch`
+- Blockers documentes :
+  - embeddings Vertex OK, mais mismatch de dimension avec l'index Firestore actuel (`768` vs `1536`)
+  - chat Vertex bloque sur le modele configure `gemini-1.5-pro` non disponible / non accessible sur ce projet
+- Decision immediate : `rag-dev` revient en `switch=azure` pour garder une plateforme stable
+- Le fallback runtime `Azure OpenAI -> Vertex AI` restera pour plus tard apres stabilisation Chainlit + Langfuse
+- Documentation API ajoutee : reference endpoints + clarification OpenAPI (`/openapi.json`, `/docs`, `/redoc`)
 ## Dernière mise à jour : 2026-04-14
 
 ## Architecture globale
@@ -63,9 +69,9 @@ OPENSEARCH_URL=http://otel-demo-opensearch.otel-demo.svc.cluster.local:9200
 PROMETHEUS_URL=http://otel-demo-prometheus-server.otel-demo.svc.cluster.local:9090
 JAEGER_URL=http://otel-demo-jaeger-query.otel-demo.svc.cluster.local:16686
 LLM_PROVIDER_STRATEGY=switch
-LLM_SWITCH_PROVIDER=vertex
+LLM_SWITCH_PROVIDER=azure
 EMBEDDING_PROVIDER_STRATEGY=switch
-EMBEDDING_SWITCH_PROVIDER=vertex
+EMBEDDING_SWITCH_PROVIDER=azure
 ```
 
 ## Phases
@@ -81,7 +87,7 @@ EMBEDDING_SWITCH_PROVIDER=vertex
 | 4.5b — GitOps : env vars + OTel Demo + KEDA fix | gitops | ✅ Done 2026-03-29 |
 | 4.5c — Swap Azure AI Search → Firestore dans le code | app | ✅ Done 2026-03-29 |
 | **4.5d — e2e smoke test** | **app** | **✅ Done 2026-04-13** |
-| 4.6 — Multi-cloud provider controls (`switch` + fallback) | app | ⏳ In progress |
+| 4.6 — Multi-cloud provider controls (`switch` + fallback) | app | ⏸️ Paused (blockers Vertex documentes, rag-dev remis sur Azure) |
 | 5 — Langfuse + Kubecost | tous | ⬜ Pending |
 | 6 — RAG + MCP hybride (navigation code live) | app | ⬜ Planned |
 
@@ -174,7 +180,7 @@ Validation complémentaire post-run :
 3. ✅ `store complete` obtenu sur le mini corpus
 4. ✅ `/query` retourne 3 résultats avec `service_filter=checkoutservice`
 5. ✅ `/query/rca` retourne un rapport RCA sans restart backend
-6. ⏭️ **Phase 4.6 — validation provider strategy** : `switch` explicite maintenant livré pour chat + embeddings, reste à valider le fallback runtime Azure OpenAI → Vertex AI en cluster
+6. ⏭️ **Phase 4.6 — validation provider strategy** : `switch` explicite maintenant livre pour chat + embeddings. Le test live 2026-04-14 prouve que les pods choisissent bien Vertex, mais le chantier est mis en pause : embeddings Vertex incompatibles avec l'index Firestore actuel (768 vs 1536) et modele chat `gemini-1.5-pro` non accessible sur ce projet. `rag-dev` revient sur Azure pour la suite. Le fallback runtime Azure OpenAI → Vertex AI restera a valider plus tard apres stabilisation Chainlit + Langfuse.
 
 ## Décisions d'architecture
 

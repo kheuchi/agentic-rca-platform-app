@@ -27,6 +27,7 @@ La documentation technique est disponible dans les deux langues.
 | Phase 6 - futur MCP | [docs/06-mcp-future.en.md](docs/06-mcp-future.en.md) | [docs/06-mcp-future.md](docs/06-mcp-future.md) |
 | Etat actuel de `otel-demo` | [docs/07-otel-demo-current-state.en.md](docs/07-otel-demo-current-state.en.md) | [docs/07-otel-demo-current-state.md](docs/07-otel-demo-current-state.md) |
 | Follow-up metriques | [docs/08-metrics-follow-up.en.md](docs/08-metrics-follow-up.en.md) | [docs/08-metrics-follow-up.md](docs/08-metrics-follow-up.md) |
+| Reference API | [docs/09-api-reference.en.md](docs/09-api-reference.en.md) | [docs/09-api-reference.md](docs/09-api-reference.md) |
 
 ## Ou l'agent RCA cherche logs, metriques et traces
 
@@ -113,6 +114,19 @@ python main.py
 docker run -p 4222:4222 nats:latest -js
 ```
 
+## Documentation API
+
+FastAPI genere automatiquement la spec API a partir des routes backend.
+
+Quand le backend est joignable, utilise :
+- `/openapi.json` pour la spec OpenAPI
+- `/docs` pour Swagger UI
+- `/redoc` pour ReDoc
+
+Reference des endpoints :
+- [docs/09-api-reference.en.md](docs/09-api-reference.en.md)
+- [docs/09-api-reference.md](docs/09-api-reference.md)
+
 ## Etat actuel
 
 - Phase 4.5d : terminee, avec un MVP RCA valide sur `code + logs + traces`
@@ -131,18 +145,24 @@ Variables d'environnement :
 - `EMBEDDING_PROVIDER_STRATEGY=fallback|switch`
 - `EMBEDDING_SWITCH_PROVIDER=azure|vertex`
 
-Exemple pour forcer Vertex AI dans `rag-dev` :
+Exemple pour forcer Azure dans `rag-dev` :
 
 ```env
 LLM_PROVIDER_STRATEGY=switch
-LLM_SWITCH_PROVIDER=vertex
+LLM_SWITCH_PROVIDER=azure
 EMBEDDING_PROVIDER_STRATEGY=switch
-EMBEDDING_SWITCH_PROVIDER=vertex
+EMBEDDING_SWITCH_PROVIDER=azure
 ```
 
 Etat de validation au 2026-04-14 :
 - la selection `switch` est couverte par des tests unitaires
-- un appel live Vertex reussi n'a pas encore ete valide
+- le routage live `switch=vertex` est valide en cluster : backend et worker selectionnent bien Vertex
+- l'API Vertex AI est maintenant activee sur `mon-rag-perso-2026`
+- le compte de service des pods a maintenant `roles/aiplatform.user`
+- les embeddings Vertex repondent maintenant correctement
+- `/query` echoue encore car l'index vectoriel Firestore actuel attend 1536 dimensions alors que le chemin Vertex teste produit 768
+- `/query/rca` echoue encore car le modele chat Vertex configure `gemini-1.5-pro` n'est pas disponible ou accessible sur ce projet
+- `rag-dev` est repasse sur Azure pour garder une plateforme stable tant que ces blockers existent
 - le fallback runtime sur erreur n'a pas encore ete valide
 - Phase 5 : en attente
 - Phase 6 : planifiee

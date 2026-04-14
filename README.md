@@ -27,6 +27,7 @@ The technical documentation is available in both languages.
 | Phase 6 - MCP future | [docs/06-mcp-future.en.md](docs/06-mcp-future.en.md) | [docs/06-mcp-future.md](docs/06-mcp-future.md) |
 | Current `otel-demo` state | [docs/07-otel-demo-current-state.en.md](docs/07-otel-demo-current-state.en.md) | [docs/07-otel-demo-current-state.md](docs/07-otel-demo-current-state.md) |
 | Metrics follow-up | [docs/08-metrics-follow-up.en.md](docs/08-metrics-follow-up.en.md) | [docs/08-metrics-follow-up.md](docs/08-metrics-follow-up.md) |
+| API reference | [docs/09-api-reference.en.md](docs/09-api-reference.en.md) | [docs/09-api-reference.md](docs/09-api-reference.md) |
 
 ## Runtime architecture
 
@@ -144,6 +145,19 @@ python main.py
 docker run -p 4222:4222 nats:latest -js
 ```
 
+## API Docs
+
+FastAPI generates the API spec automatically from the backend routes.
+
+When the backend is reachable, use:
+- `/openapi.json` for the OpenAPI spec
+- `/docs` for Swagger UI
+- `/redoc` for ReDoc
+
+Endpoint reference:
+- [docs/09-api-reference.en.md](docs/09-api-reference.en.md)
+- [docs/09-api-reference.md](docs/09-api-reference.md)
+
 ## Current status
 
 - Phase 4.5d: done, with an RCA MVP validated on `code + logs + traces`
@@ -162,18 +176,24 @@ Environment variables:
 - `EMBEDDING_PROVIDER_STRATEGY=fallback|switch`
 - `EMBEDDING_SWITCH_PROVIDER=azure|vertex`
 
-Example to force Vertex AI in `rag-dev`:
+Example to force Azure in `rag-dev`:
 
 ```env
 LLM_PROVIDER_STRATEGY=switch
-LLM_SWITCH_PROVIDER=vertex
+LLM_SWITCH_PROVIDER=azure
 EMBEDDING_PROVIDER_STRATEGY=switch
-EMBEDDING_SWITCH_PROVIDER=vertex
+EMBEDDING_SWITCH_PROVIDER=azure
 ```
 
 Validation status on 2026-04-14:
 - `switch` selection is covered by unit tests
-- live Vertex API success has not been validated yet
+- live `switch=vertex` routing is validated in cluster: backend and worker both select Vertex
+- the Vertex AI API is now enabled on `mon-rag-perso-2026`
+- the pod service account now has `roles/aiplatform.user`
+- live Vertex embeddings now answer successfully
+- `/query` still fails because the current Firestore vector index expects 1536 dimensions while the tested Vertex embedding path produces 768
+- `/query/rca` still fails because the configured Vertex chat model `gemini-1.5-pro` is not available or not accessible on this project
+- `rag-dev` has been switched back to Azure for stability while these blockers remain
 - live fallback-on-error has not been validated yet
 - Phase 5: pending
 - Phase 6: planned
