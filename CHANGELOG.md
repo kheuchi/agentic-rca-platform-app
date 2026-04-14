@@ -1,3 +1,10 @@
+## [1.7.2](https://github.com/kheuchi/rag-platform-app/compare/v1.7.1...v1.7.2) (2026-04-14)
+
+
+### Bug Fixes
+
+* broaden opensearch log index lookup ([#9](https://github.com/kheuchi/rag-platform-app/issues/9)) ([05261aa](https://github.com/kheuchi/rag-platform-app/commit/05261aa75fc67419c08e6ca5b16bee765ca07684))
+
 ## [1.7.1](https://github.com/kheuchi/rag-platform-app/compare/v1.7.0...v1.7.1) (2026-04-14)
 
 
