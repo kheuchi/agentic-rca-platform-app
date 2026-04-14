@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/kheuchi/rag-platform-app/compare/v1.6.3...v1.7.0) (2026-04-14)
+
+
+### Features
+
+* align RCA observability stack with otel demo ([#7](https://github.com/kheuchi/rag-platform-app/issues/7)) ([b4eabcd](https://github.com/kheuchi/rag-platform-app/commit/b4eabcd06a7bd6864d308a49c3718b545a398394))
+
 ## [1.6.3](https://github.com/kheuchi/rag-platform-app/compare/v1.6.2...v1.6.3) (2026-04-13)
 
 
