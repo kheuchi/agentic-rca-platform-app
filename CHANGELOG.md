@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/kheuchi/rag-platform-app/compare/v1.8.0...v1.9.0) (2026-04-14)
+
+
+### Features
+
+* add provider switch strategy ([#16](https://github.com/kheuchi/rag-platform-app/issues/16)) ([744be97](https://github.com/kheuchi/rag-platform-app/commit/744be97c9b7890cde5727c624a82f1c20a7a3470))
+
 # [1.8.0](https://github.com/kheuchi/rag-platform-app/compare/v1.7.5...v1.8.0) (2026-04-14)
 
 
