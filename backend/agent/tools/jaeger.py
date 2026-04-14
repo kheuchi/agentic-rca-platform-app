@@ -135,7 +135,8 @@ async def query_jaeger_traces(
     if errors_only:
         params["tags"] = json.dumps({"error": "true"})
 
-    url = f"{settings.jaeger_url}/api/traces"
+    base_url = settings.jaeger_url.rstrip("/")
+    url = f"{base_url}/jaeger/ui/api/traces"
     async with httpx.AsyncClient() as client:
         resp = await client.get(url, params=params, timeout=30)
         resp.raise_for_status()

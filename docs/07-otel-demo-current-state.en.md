@@ -20,7 +20,7 @@ The following application or observability services were visible from `kubectl g
 | `otel-demo-prometheus-server` | Deployment + Service | Metrics backend |
 | `otel-demo-valkey` | Deployment + Service | Cache / Redis-compatible |
 
-Notably absent from the live namespace at that time:
+Notably absent from the live namespace during the first check:
 
 - `checkoutservice`
 - `paymentservice`
@@ -31,6 +31,12 @@ Notably absent from the live namespace at that time:
 - `otel-demo-jaeger-query`
 - `otel-demo-jaeger-collector`
 - `otel-demo-opensearch`
+
+Update on 2026-04-14 after the alignment and sync work:
+
+- `otel-demo-jaeger` is now running in the namespace
+- `otel-demo-opensearch` is now running in the namespace
+- the `otel-demo-jaeger-query:16686` service exposes its JSON API under `/jaeger/ui/api/...` because the pod is started with `--query.base-path=/jaeger/ui`
 
 ## Storage shape
 
@@ -45,7 +51,7 @@ This means the currently visible `otel-demo` workloads are not using PVC-backed 
 
 ## Where logs, metrics, and traces are supposed to go
 
-The active OpenTelemetry Collector config showed this routing:
+The active OpenTelemetry Collector config shows this routing:
 
 | Signal | Configured backend | Evidence |
 |---|---|---|
@@ -82,21 +88,22 @@ That creates a mismatch with the currently visible `otel-demo` stack:
 - the desired trace backend is now Jaeger, which matches the collector config
 - the remaining work is deployment convergence, because those live services were still absent or broken during the last cluster verification
 
-There is also a runtime issue on traces:
+Live state confirmed on 2026-04-14:
 
-- the collector logs showed repeated export failures to `otel-demo-jaeger-collector:4317`
-- traces were being generated, but the exporter was failing to resolve the target and was dropping data
+- `Prometheus` responds correctly from `rag-backend`
+- `Jaeger` responds correctly through `otel-demo-jaeger-query:16686/jaeger/ui/api/...`
+- `OpenSearch` responds correctly on `:9200`
+- however, the expected log index `otel` still did not exist at check time, so application logs were not yet queryable by the RCA agent
 
 ## Can we run a real mini corpus test right now?
 
-Not yet for a full `code + logs + metrics + traces` RCA scenario.
+Not yet for a fully grounded `code + logs + metrics + traces` RCA scenario.
 
 Current blockers:
 
 1. `checkoutservice` is not running in `otel-demo`, so the old checkout-focused scenario is not representative.
-2. The cluster still needs live OpenSearch and Jaeger services behind the collector configuration.
-3. Trace export is currently broken because the collector cannot reach the configured Jaeger collector.
-4. The last live check did not show running OpenSearch or Jaeger workloads.
+2. Traces and metrics are now verifiable, but logs are still missing from the expected OpenSearch `otel` index.
+3. Until the `otel` index exists, the agent can produce an RCA mostly from code, metrics, and traces, but not from a fully grounded log correlation.
 
 ## Recommended path for a real mini observability test
 
