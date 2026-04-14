@@ -1,3 +1,10 @@
+## [1.7.5](https://github.com/kheuchi/rag-platform-app/compare/v1.7.4...v1.7.5) (2026-04-14)
+
+
+### Bug Fixes
+
+* keep prometheus fallback within client context ([#13](https://github.com/kheuchi/rag-platform-app/issues/13)) ([0d0afe1](https://github.com/kheuchi/rag-platform-app/commit/0d0afe10b48b4a2d901fadfafda73978e0cea270))
+
 ## [1.7.4](https://github.com/kheuchi/rag-platform-app/compare/v1.7.3...v1.7.4) (2026-04-14)
 
 
