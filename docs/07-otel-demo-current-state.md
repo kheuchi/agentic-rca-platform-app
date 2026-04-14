@@ -95,6 +95,27 @@ Etat live confirme le 2026-04-14 :
 - `OpenSearch` repond bien sur `:9200`
 - en revanche, l'index de logs attendu `otel` n'existait toujours pas au moment du controle, donc les logs applicatifs n'etaient pas encore interrogeables par l'agent RCA
 
+Mesures directes prises sur les metriques internes du collector :
+
+- `otelcol_receiver_accepted_log_records{receiver="otlp"}` = `6`
+- `otelcol_exporter_sent_log_records{exporter="debug"}` = `6`
+- `otelcol_exporter_sent_log_records{exporter="opensearch"}` = `0`
+- `otelcol_exporter_send_failed_log_records{exporter="opensearch"}` = `6`
+
+Interpretation :
+
+- les services envoient bien quelques log records au collector
+- le collector les accepte bien
+- l'exporter `opensearch` echoue ensuite a tous les ecrire dans OpenSearch
+- le probleme n'est donc pas "aucun log n'est emis", mais "les logs recus ne sont pas indexes avec succes"
+
+Hypothese de travail :
+
+- l'exporter OpenSearch du collector est encore `alpha`
+- la configuration live utilise un index custom `logs_index: otel`
+- d'apres la documentation upstream de l'exporter, le pattern par defaut pour les logs est `ss4o_logs-{dataset}-{namespace}`
+- il est donc plausible qu'on ait soit un probleme de compatibilite/exporter, soit un souci lie au mode d'indexation choisi
+
 ## Peut-on faire un vrai mini test maintenant ?
 
 Pas encore pour un scenario RCA complet `code + logs + metriques + traces` pleinement ancre sur des donnees live.
