@@ -142,6 +142,23 @@ async def query_jaeger_traces(
         resp.raise_for_status()
         data = resp.json()
 
+        # Jaeger in this demo stack responds reliably to the simpler lookback-based query,
+        # while explicit start/end bounds can occasionally over-constrain recent traces.
+        if not data.get("data"):
+            fallback_params = {
+                "service": service_name,
+                "limit": str(limit),
+                "lookback": _lookback_to_jaeger(lookback_minutes),
+            }
+            if min_duration_us is not None:
+                fallback_params["minDuration"] = str(min_duration_us)
+            if errors_only:
+                fallback_params["tags"] = json.dumps({"error": "true"})
+
+            fallback_resp = await client.get(url, params=fallback_params, timeout=30)
+            fallback_resp.raise_for_status()
+            data = fallback_resp.json()
+
     results = [_build_trace_summary(trace) for trace in data.get("data", [])]
     logger.info(
         "Jaeger search: %d traces for service=%s (last %d min, errors_only=%s)",
