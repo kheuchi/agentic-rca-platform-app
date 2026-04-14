@@ -5,6 +5,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 import httpx
+from httpx import HTTPStatusError
 from langchain_core.tools import tool
 
 from config import settings
@@ -126,11 +127,20 @@ async def query_opensearch_logs(
         },
     }
 
-    url = f"{settings.opensearch_url}/_search"
+    base_url = settings.opensearch_url.rstrip("/")
+    url = f"{base_url}/otel*/_search"
     async with httpx.AsyncClient() as client:
-        resp = await client.post(url, json=body, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
+        try:
+            resp = await client.post(url, json=body, timeout=30)
+            resp.raise_for_status()
+            data = resp.json()
+        except HTTPStatusError as exc:
+            if exc.response.status_code == 404:
+                logger.info(
+                    "OpenSearch index pattern otel* not found; returning no log results"
+                )
+                return []
+            raise
 
     results = []
     for hit in data.get("hits", {}).get("hits", []):
