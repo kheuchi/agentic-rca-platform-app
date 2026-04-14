@@ -1,3 +1,10 @@
+## [1.7.4](https://github.com/kheuchi/rag-platform-app/compare/v1.7.3...v1.7.4) (2026-04-14)
+
+
+### Bug Fixes
+
+* add jaeger and prometheus query fallbacks ([#12](https://github.com/kheuchi/rag-platform-app/issues/12)) ([c8bdf95](https://github.com/kheuchi/rag-platform-app/commit/c8bdf959877f33b26e18db7d7cba2a23abbe173f))
+
 ## [1.7.3](https://github.com/kheuchi/rag-platform-app/compare/v1.7.2...v1.7.3) (2026-04-14)
 
 
