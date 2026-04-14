@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     azure_openai_endpoint: str = ""
     azure_openai_api_key: str = ""
     azure_openai_embedding_deployment: str = "text-embedding-3-small"
+    embedding_provider_strategy: str = "fallback"
+    embedding_switch_provider: str = "azure"
 
     # GCP
     gcp_project_id: str = ""

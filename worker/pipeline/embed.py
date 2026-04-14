@@ -1,4 +1,4 @@
-"""Embedding step - Azure OpenAI (primary) + Vertex AI (fallback)."""
+"""Embedding step with fallback or explicit provider switching."""
 
 import logging
 from typing import Sequence
@@ -47,46 +47,125 @@ class FallbackEmbeddingAdapter:
             return await self._fallback.aget_text_embedding_batch(texts)
 
 
-def get_embedding_model():
-    """Create an embedding model - Azure OpenAI primary, Vertex AI runtime fallback."""
-    from langchain_google_vertexai import VertexAIEmbeddings
+def _normalize_strategy(value: str) -> str:
+    normalized = (value or "fallback").strip().lower()
+    aliases = {
+        "azure_only": "switch",
+        "vertex_only": "switch",
+        "primary_only": "switch",
+    }
+    return aliases.get(normalized, normalized)
 
-    fallback = VertexEmbeddingAdapter(
-        VertexAIEmbeddings(
-            model_name="text-embedding-004",
-            project=settings.gcp_project_id,
-            location=settings.gcp_location,
-        )
+
+def _normalize_provider(value: str) -> str:
+    normalized = (value or "azure").strip().lower()
+    if normalized in {"primary", "azure_only"}:
+        return "azure"
+    if normalized in {"fallback", "vertex_only"}:
+        return "vertex"
+    return normalized
+
+
+def resolve_embedding_provider_mode(
+    strategy: str,
+    switch_provider: str,
+    *,
+    azure_ready: bool,
+    vertex_ready: bool,
+) -> str:
+    """Resolve which provider mode to use for worker embeddings."""
+    strategy = _normalize_strategy(strategy)
+    switch_provider = _normalize_provider(switch_provider)
+
+    if strategy == "switch":
+        if switch_provider == "azure":
+            if not azure_ready:
+                raise RuntimeError("Embedding switch is set to Azure OpenAI, but Azure is not configured.")
+            return "azure"
+        if switch_provider == "vertex":
+            if not vertex_ready:
+                raise RuntimeError("Embedding switch is set to Vertex AI, but Vertex is not configured.")
+            return "vertex"
+        raise RuntimeError(f"Unsupported embedding_switch_provider: {switch_provider}")
+
+    if strategy != "fallback":
+        raise RuntimeError(f"Unsupported embedding_provider_strategy: {strategy}")
+
+    if azure_ready and vertex_ready:
+        return "fallback"
+    if azure_ready:
+        return "azure"
+    if vertex_ready:
+        return "vertex"
+
+    raise RuntimeError("No embedding provider configured. Set Azure OpenAI or Vertex AI settings.")
+
+
+def get_embedding_model():
+    """Create an embedding model with fallback or explicit provider switching."""
+    azure_ready = bool(settings.azure_openai_endpoint and settings.azure_openai_api_key)
+    vertex_ready = bool(settings.gcp_project_id)
+    mode = resolve_embedding_provider_mode(
+        settings.embedding_provider_strategy,
+        settings.embedding_switch_provider,
+        azure_ready=azure_ready,
+        vertex_ready=vertex_ready,
     )
 
-    if settings.azure_openai_endpoint and settings.azure_openai_api_key:
+    vertex_model = None
+    if vertex_ready and mode in {"vertex", "fallback"}:
+        from langchain_google_vertexai import VertexAIEmbeddings
+
+        vertex_model = VertexEmbeddingAdapter(
+            VertexAIEmbeddings(
+                model_name="text-embedding-004",
+                project=settings.gcp_project_id,
+                location=settings.gcp_location,
+            )
+        )
+
+    azure_model = None
+    if azure_ready and mode in {"azure", "fallback"}:
         from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 
-        logger.info(
-            "Embeddings: Azure OpenAI %s with Vertex AI fallback",
-            settings.azure_openai_embedding_deployment,
-        )
-        primary = AzureOpenAIEmbedding(
+        azure_model = AzureOpenAIEmbedding(
             azure_endpoint=settings.azure_openai_endpoint,
             api_key=settings.azure_openai_api_key,
             azure_deployment=settings.azure_openai_embedding_deployment,
             api_version="2024-08-01-preview",
         )
-        return FallbackEmbeddingAdapter(primary, fallback)
 
-    logger.info("Azure OpenAI not configured, using Vertex AI embeddings only")
-    return fallback
+    if mode == "fallback" and azure_model and vertex_model:
+        logger.info(
+            "Embeddings: Azure OpenAI %s with Vertex AI fallback",
+            settings.azure_openai_embedding_deployment,
+        )
+        return FallbackEmbeddingAdapter(azure_model, vertex_model)
+
+    if mode == "azure" and azure_model:
+        logger.info(
+            "Embeddings: Azure OpenAI %s only (switch mode)",
+            settings.azure_openai_embedding_deployment,
+        )
+        return azure_model
+
+    if mode == "vertex" and vertex_model:
+        logger.info("Embeddings: Vertex AI only (switch mode)")
+        return vertex_model
+
+    if mode == "fallback" and azure_model:
+        logger.info("Embeddings: Azure OpenAI only")
+        return azure_model
+
+    if mode == "fallback" and vertex_model:
+        logger.info("Embeddings: Vertex AI only")
+        return vertex_model
+
+    raise RuntimeError("Failed to initialize the configured embedding provider.")
 
 
 async def embed_chunks(nodes: list[TextNode]) -> list[TextNode]:
-    """Embed all chunks using Azure OpenAI text-embedding-3-small.
-
-    Args:
-        nodes: TextNode list from chunk_documents().
-
-    Returns:
-        Same nodes with embedding vectors populated.
-    """
+    """Embed all chunks using the configured embedding provider."""
     if not nodes:
         return nodes
 
