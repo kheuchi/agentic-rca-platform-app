@@ -81,19 +81,21 @@ The repositories have now been updated to target:
 - metrics via Prometheus
 - traces via Jaeger
 
-That creates a mismatch with the currently visible `otel-demo` stack:
+That initially created a mismatch with the visible `otel-demo` stack:
 
 - metrics align with Prometheus
 - the desired log backend is now OpenSearch, which matches the collector config
 - the desired trace backend is now Jaeger, which matches the collector config
-- the remaining work is deployment convergence, because those live services were still absent or broken during the last cluster verification
+- the remaining work was deployment convergence, because those live services were still absent or broken during the last cluster verification
 
 Live state confirmed on 2026-04-14:
 
 - `Prometheus` responds correctly from `rag-backend`
 - `Jaeger` responds correctly through `otel-demo-jaeger-query:16686/jaeger/ui/api/...`
 - `OpenSearch` responds correctly on `:9200`
-- however, the expected log index `otel` still did not exist at check time, so application logs were not yet queryable by the RCA agent
+- the collector now runs as a `DaemonSet`
+- the `logsCollection` preset is now active with a `filelog` receiver that reads `/var/log/pods/*/*/*.log`
+- the `otel` log index now exists in OpenSearch
 
 Direct measurements from the collector's internal metrics:
 
@@ -109,22 +111,29 @@ Interpretation:
 - the `opensearch` exporter is then failing to write all of them into OpenSearch
 - so the problem is not "no logs are emitted", but "accepted logs are not successfully indexed"
 
-Working hypothesis:
+Resolution confirmed later on 2026-04-14:
 
-- the collector's OpenSearch exporter is still `alpha`
-- the live config uses a custom `logs_index: otel`
-- according to the upstream exporter documentation, the default log pattern is `ss4o_logs-{dataset}-{namespace}`
-- so it is plausible that we are hitting either an exporter compatibility issue or a problem related to the chosen indexing mode
+- GitOps PR `#12` switched the collector to `DaemonSet` mode
+- `presets.logsCollection.enabled: true` enabled pod stdout log collection through `filelog`
+- collector logs now show regular `LogsExporter` activity on the `debug` exporter
+- OpenSearch now exposes an `otel` index
+- `GET /otel/_count` returned `598` documents at verification time
+
+Practical conclusion:
+
+- application logs from the mini cluster are now being indexed in OpenSearch
+- the RCA agent can now query a real log backend aligned with the live stack
+- the remaining question is no longer "are there logs?" but "is the RCA scenario representative enough?"
 
 ## Can we run a real mini corpus test right now?
 
-Not yet for a fully grounded `code + logs + metrics + traces` RCA scenario.
+Yes, as long as the test targets a service that is still alive in `otel-demo`.
 
 Current blockers:
 
 1. `checkoutservice` is not running in `otel-demo`, so the old checkout-focused scenario is not representative.
-2. Traces and metrics are now verifiable, but logs are still missing from the expected OpenSearch `otel` index.
-3. Until the `otel` index exists, the agent can produce an RCA mostly from code, metrics, and traces, but not from a fully grounded log correlation.
+2. The question should target a live service such as `frontendproxy`, `frontend`, `cartservice`, or `productcatalogservice`.
+3. The RCA question should be scoped to a controlled traffic window so the evidence stays readable.
 
 ## Recommended path for a real mini observability test
 
@@ -135,17 +144,14 @@ Pick one live service such as:
 - `cartservice`
 - `productcatalogservice`
 
-Then use one of these two paths.
+### Option A: use the now-converged stack
 
-### Option A: converge the cluster to the now-aligned RCA agent
+The live stack is now coherent enough for a mini test:
 
-Best if we want to keep the updated app and GitOps configuration.
-
-1. Deploy or restore live `OpenSearch` and `Jaeger` services in `otel-demo`.
-2. Ensure the collector exports logs to OpenSearch and traces to Jaeger.
-3. Keep Prometheus as the metrics backend.
-4. Generate controlled traffic against one live service.
-5. Confirm data exists in all three observability backends before running `/query/rca`.
+1. `OpenSearch` is available and contains application logs.
+2. `Jaeger` is available for traces.
+3. `Prometheus` is available for metrics.
+4. The collector now also gathers pod stdout logs through `filelog`.
 
 ## Small, realistic test plan
 
@@ -160,4 +166,4 @@ For a true mini corpus test:
    - traces are visible in the chosen trace backend
 4. Run `/query/rca` with a question tied to that exact service and traffic window.
 
-Until the backend/tooling mismatch is fixed, the current smoke test proves code ingestion and RCA runtime stability, but not a fully grounded RCA correlation across all three observability signal types.
+The next meaningful mini test can now aim for a real `code + logs + metrics + traces` correlation on an active service such as `frontendproxy`.
