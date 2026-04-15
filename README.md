@@ -220,6 +220,22 @@ This layer separates a prototype from a production RAG system.
 
 Phase 6 (RAG + MCP hybrid) aligns with emerging patterns at Anthropic and Cursor — semantic discovery via RAG, direct file navigation via MCP tools.
 
+## Redis — current use and potential future uses
+
+### Current use
+
+Redis is currently used for **job status tracking only**: the worker writes the ingestion progress (`cloning`, `parsing`, `embedding`, `done`) into a Redis hash with a 24h TTL, and the backend reads it when the client polls `/ingest/status/{job_id}`. This is best-effort — if Redis is unavailable the worker keeps running.
+
+Note: Redis is not currently functional in the cluster (env vars not injected into the worker deployment). This is a known blocker tracked in context.md.
+
+### TODO — potential future uses
+
+- [ ] **LLM response cache** — cache the final `/query` response keyed on `hash(query)`. Highest ROI given the Azure OpenAI S0 rate limit (429 errors). LangChain provides `RedisSemanticCache` which caches on similarity, not just exact match.
+- [ ] **Ingestion deduplication** — set a key `indexed:{repo_url}:{commit_sha}` after a successful ingest. Prevents duplicate chunks in Firestore if `/ingest/repo` is called twice on the same commit.
+- [ ] **Rate limiting** — sliding window counter per user/IP to protect the Azure OpenAI quota. A FastAPI middleware writing `ratelimit:{ip}:{minute}` with `INCR` + `EXPIRE` covers this in ~10 lines.
+- [ ] **Conversational session history** — store the last N messages per Chainlit session. LangGraph handles its own checkpoints, but Redis is a natural fit for short-lived session state across restarts.
+- [ ] **Pub/Sub for ingest completion events** — publish a `ingest.done` event when the worker finishes, subscribe in the backend to push a WebSocket notification to Chainlit. NATS already covers this in the current architecture, so this would be redundant unless NATS is removed.
+
 ## Repository structure
 
 ```text
@@ -284,7 +300,15 @@ Endpoint reference:
 - Metrics remain a dedicated follow-up item
 - Phase 4.6: `switch` is implemented and live-tested, but the Vertex track is now paused
 - `rag-dev` must stay on Azure (`switch=azure`) while the documented Vertex blockers remain unresolved
-- Phase 5 is the active workstream: Langfuse on the application side, Kubecost in infra/GitOps
+- Phase 5 is the active workstream
+- Chainlit is now containerized in this repo and deployed to `rag-dev` via GitOps as `rag-chainlit`
+- Langfuse is now declared in GitOps as an ArgoCD Helm application with bundled PostgreSQL, Redis, ClickHouse, and S3-compatible storage
+- Live status on 2026-04-15: the AKS `systempool` was scaled from 1 to 2 nodes
+- `rag-chainlit`, `rag-backend`, `langfuse-clickhouse`, and `langfuse-redis` are running after the scale-up
+- Langfuse still remains blocked because both nodes hit `DiskPressure`, which prevents `langfuse-postgresql` from scheduling reliably and keeps `langfuse-web` waiting on the database
+- The full live flow `Chainlit -> backend/agent -> Langfuse` therefore remains pending until cluster capacity is increased or freed
+- Chainlit should stay in simple mode for now: internal `ClusterIP`, no auth, no ingress
+- Internal access remains possible through `kubectl port-forward -n rag-dev svc/rag-chainlit 8000:8000`
 
 ## Provider Strategy
 
@@ -334,4 +358,7 @@ Current implementation notes:
 - Langfuse is optional: if the keys are missing, the backend keeps running without tracing
 - Langfuse callbacks are attached to chat-model invocations with session-aware metadata
 - A local Chainlit UI is available in `chainlit_ui/app.py`
+- The Kubernetes deployment also references `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_BASE_URL`
+- The `langfuse-secrets` Kubernetes secret is intentionally not committed to git and still depends on the first Langfuse bootstrap project/API keys
+- During the 2026-04-15 live rollout, the PostgreSQL bootstrap secret also needed the `postgres-password` key in addition to `password`
 - Kubecost belongs to infrastructure and GitOps rollout work, not to this application repository
