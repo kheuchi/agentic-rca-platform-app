@@ -4,18 +4,10 @@ French version: [09-api-reference.md](./09-api-reference.md)
 
 ## OpenAPI
 
-The backend is a FastAPI application defined in `backend/main.py`.
-FastAPI generates the OpenAPI document automatically.
-
-When the backend is reachable, the API docs are available at:
+Available when the backend is reachable:
 - `/openapi.json` — machine-readable OpenAPI spec
-- `/docs` — Swagger UI generated from the OpenAPI spec
-- `/redoc` — ReDoc generated from the OpenAPI spec
-
-If you do not see `openapi.json`, the usual causes are:
-- the backend is not exposed on the URL you are testing
-- you are hitting the wrong base URL or port
-- the request is going through a path prefix or proxy that does not expose `/openapi.json`
+- `/docs` — Swagger UI
+- `/redoc` — ReDoc
 
 ## Available Endpoints
 
