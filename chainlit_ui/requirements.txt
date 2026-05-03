@@ -1,0 +1,13 @@
+pydantic>=2.11.5
+pydantic-settings>=2.13
+langchain-core>=1.1,<2
+langsmith>=0.3,<1
+langchain-openai>=1.1
+langchain-google-vertexai>=3.2
+langgraph>=1.1
+llama-index-core==0.14.18
+llama-index-embeddings-azure-openai>=0.5
+google-cloud-firestore>=2.19
+httpx>=0.27
+langfuse>=2.0
+chainlit>=2.11

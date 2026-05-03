@@ -3,6 +3,76 @@
 > Ce fichier est la source de vérité du projet. Mis à jour à chaque fin de phase.
 > Il est dupliqué sur les 3 repos. Quand tu ouvres une nouvelle session Claude, dis-lui de lire ce fichier.
 
+## Update 2026-04-15
+
+- Phase `5` demarree cote `app` avec une premiere integration **Chainlit + Langfuse**
+- Une UI locale Chainlit existe maintenant dans `chainlit_ui/app.py`
+- L'UI reutilise directement l'agent RCA LangGraph existant au lieu d'appeler une API separee
+- Le tracing Langfuse cote backend est enrichi avec un contexte de session / utilisateur / stage RCA
+- Compatibilite Langfuse mise a jour : `LANGFUSE_BASE_URL` supporte, `LANGFUSE_HOST` garde comme alias legacy
+- Refactor leger livre : etat RCA mutualise dans `backend/agent/rca.py` pour l'API FastAPI et Chainlit
+- Decision maintenue : `rag-dev` reste en `switch=azure`, le chantier Vertex reste documente mais en pause
+- Deploiement GitOps Phase 5 engage :
+  - image `ghcr.io/kheuchi/rag-chainlit:latest` construite et poussee
+  - manifest `rag-chainlit` ajoute dans `rag-platform-gitops/tenants/rag-dev`
+  - app ArgoCD `langfuse` ajoutee dans `rag-platform-gitops/argocd/apps`
+  - chart Helm Langfuse configure avec PostgreSQL + Redis + ClickHouse + S3 embarques
+  - `LANGFUSE_BASE_URL` reference maintenant `http://langfuse-web.rag-dev.svc.cluster.local:3000`
+- Validation live 2026-04-15 :
+  - `rag-chainlit` tourne bien dans `rag-dev`
+  - `rag-backend` est revenu `Running`
+  - l'app ArgoCD `langfuse` est acceptee et synchronisee, mais reste `Progressing`
+  - le nodepool AKS `systempool` a ete scale de `1` a `2` noeuds `Standard_D2s_v3`
+  - ce scale a debloque le scheduling de `langfuse-clickhouse`, `langfuse-redis` et `langfuse-postgresql`
+  - un defaut de secret a ete trouve puis corrige en live : `langfuse-postgresql-secret` devait contenir `postgres-password` en plus de `password`
+  - le `DiskPressure` AKS a ete traite en pratique par le scale-up + la replanification des pods ; les dependances stateful Langfuse tournent maintenant
+  - un second ajustement live a ete necessaire pour Langfuse :
+    - ressources `web` / `worker` augmentees a `1Gi` en limite memoire
+    - `NODE_OPTIONS=--max-old-space-size=768` ajoute pour eviter le `JavaScript heap out of memory`
+    - probes `web` / `worker` rallongees pour laisser finir les init scripts
+  - bootstrap Langfuse termine :
+    - premier compte cree avec `cheikhaliounendiaye@gmail.com`
+    - organisation `rag-dev` creee
+    - projet `rag-platform-app` cree
+    - cles API projet creees puis injectees dans le secret K8s `langfuse-secrets`
+  - etat courant :
+    - `langfuse-postgresql`, `langfuse-redis`, `langfuse-clickhouse`, `langfuse-s3`, `langfuse-worker`, `langfuse-web` : `Running`
+    - `rag-backend` et `rag-chainlit` : redemarres avec le secret Langfuse actif
+  - un dernier bug de routage Langfuse a ete trouve puis corrige en live :
+    - le service `langfuse` n'avait pas d'endpoints
+    - l'URL valide est `http://langfuse-web.rag-dev.svc.cluster.local:3000`
+    - `rag-backend` et `rag-chainlit` ont ete patches pour pointer vers `langfuse-web`
+  - validation end-to-end obtenue :
+    - `POST /query/rca` repond `200`
+    - des `traces` et `observations` sont visibles via l'API publique Langfuse
+    - le flux `Chainlit -> backend/agent -> Langfuse` est maintenant operationnel dans `rag-dev`
+  - validation provider live maintenue :
+    - `rag-dev` reste bien sur Azure aujourd'hui
+    - `LLM_PROVIDER_STRATEGY=switch`
+    - `LLM_SWITCH_PROVIDER=azure`
+    - `EMBEDDING_PROVIDER_STRATEGY=switch`
+    - `EMBEDDING_SWITCH_PROVIDER=azure`
+- Decision provisoire :
+  - le host final `langfuse-web.rag-dev.svc.cluster.local` a ete repercute dans `rag-platform-gitops` :
+    - `argocd/apps/langfuse-app.yaml`
+    - `tenants/rag-dev/backend-deployment.yaml`
+    - `tenants/rag-dev/chainlit-deployment.yaml`
+  - Chainlit n'est plus en mode purement interne :
+    - auth applicative par mot de passe activee via `CHAINLIT_AUTH_SECRET`, `CHAINLIT_USERNAME`, `CHAINLIT_PASSWORD`
+    - ingress NGINX deploye via GitOps (`ingress-nginx-app.yaml`)
+    - resource `Ingress` ajoutee pour `rag-chainlit`
+    - endpoint public actuel : `http://20.124.47.17/`
+  - Langfuse n'est plus limite au port-forward :
+    - resource `Ingress` ajoutee pour `langfuse-web`
+    - `nextauth.url` aligne sur l'URL publique
+    - endpoint public actuel : `http://langfuse.20.124.47.17.nip.io/`
+  - l'acces dev via `kubectl port-forward -n rag-dev svc/rag-chainlit 8000:8000` reste possible
+  - ArgoCD garde une IP publique distincte car son service `argocd-server` est lui aussi de type `LoadBalancer`
+- Reste a faire en Phase 5 :
+  - nettoyer l'ancien service Helm `langfuse` sans endpoints si on confirme qu'il ne sert plus
+  - si besoin, remplacer les acces par IP / `nip.io` par un vrai hostname/TLS
+  - reprendre Kubecost cote infra/gitops, hors de ce repo applicatif
+
 ## Update 2026-04-14
 
 - Phase `4.5d` est maintenant valide en mode MVP sur `code + logs + traces`
@@ -21,7 +91,7 @@
 - Decision immediate : `rag-dev` revient en `switch=azure` pour garder une plateforme stable
 - Le fallback runtime `Azure OpenAI -> Vertex AI` restera pour plus tard apres stabilisation Chainlit + Langfuse
 - Documentation API ajoutee : reference endpoints + clarification OpenAPI (`/openapi.json`, `/docs`, `/redoc`)
-## Dernière mise à jour : 2026-04-14
+## Dernière mise à jour : 2026-04-15
 
 ## Architecture globale
 
@@ -88,7 +158,7 @@ EMBEDDING_SWITCH_PROVIDER=azure
 | 4.5c — Swap Azure AI Search → Firestore dans le code | app | ✅ Done 2026-03-29 |
 | **4.5d — e2e smoke test** | **app** | **✅ Done 2026-04-13** |
 | 4.6 — Multi-cloud provider controls (`switch` + fallback) | app | ⏸️ Paused (blockers Vertex documentes, rag-dev remis sur Azure) |
-| 5 — Langfuse + Kubecost | tous | ⬜ Pending |
+| 5 — Langfuse + Kubecost | tous | 🟡 In progress (Chainlit + Langfuse valides en live sur `rag-dev`, Kubecost et harmonisation GitOps restants) |
 | 6 — RAG + MCP hybride (navigation code live) | app | ⬜ Planned |
 
 ## Phase 4.5d — Smoke test progress (2026-04-13)
@@ -181,6 +251,7 @@ Validation complémentaire post-run :
 4. ✅ `/query` retourne 3 résultats avec `service_filter=checkoutservice`
 5. ✅ `/query/rca` retourne un rapport RCA sans restart backend
 6. ⏭️ **Phase 4.6 — validation provider strategy** : `switch` explicite maintenant livre pour chat + embeddings. Le test live 2026-04-14 prouve que les pods choisissent bien Vertex, mais le chantier est mis en pause : embeddings Vertex incompatibles avec l'index Firestore actuel (768 vs 1536) et modele chat `gemini-1.5-pro` non accessible sur ce projet. `rag-dev` revient sur Azure pour la suite. Le fallback runtime Azure OpenAI → Vertex AI restera a valider plus tard apres stabilisation Chainlit + Langfuse.
+7. ⏭️ **Phase 5 — Chainlit + Langfuse** : base applicative + deploiement `rag-dev` maintenant valides en live. L'harmonisation GitOps du host `langfuse-web` et l'ouverture Chainlit avec auth + ingress sont faites. Reste surtout un nettoyage Helm/K8s eventuel, un hostname/TLS si voulu, puis Kubecost cote infra.
 
 ## Décisions d'architecture
 

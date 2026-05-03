@@ -7,6 +7,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 from agent.state import RCAState
 from llm.providers import get_chat_llm
+from llm.tracing import build_langchain_config
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +112,29 @@ def _build_evidence_context(state: RCAState) -> str:
     return "\n".join(parts) if parts else "No evidence gathered yet."
 
 
+def _build_llm_invoke_config(state: RCAState, stage: str) -> dict:
+    """Build LangChain invoke config with trace metadata for this RCA stage."""
+    tags = [*state.get("trace_tags", []), "langgraph", "rca", stage]
+    service = state.get("service")
+    if service:
+        tags.append(service)
+
+    metadata = {
+        "question": state.get("question", ""),
+        "service": service or "",
+        "time_range": state.get("time_range", "1h"),
+        "iteration": state.get("iteration", 0) + 1,
+        "stage": stage,
+    }
+
+    return build_langchain_config(
+        session_id=state.get("session_id"),
+        user_id=state.get("user_id"),
+        tags=tags,
+        metadata=metadata,
+    )
+
+
 async def plan_search(state: RCAState) -> dict:
     """LLM decides which tools to call based on the question and evidence so far."""
     llm = get_chat_llm()
@@ -125,10 +149,13 @@ async def plan_search(state: RCAState) -> dict:
         f"Evidence gathered so far:\n{evidence}"
     )
 
-    resp = await llm.ainvoke([
-        HumanMessage(content=PLAN_SYSTEM_PROMPT),
-        HumanMessage(content=user_msg),
-    ])
+    resp = await llm.ainvoke(
+        [
+            HumanMessage(content=PLAN_SYSTEM_PROMPT),
+            HumanMessage(content=user_msg),
+        ],
+        config=_build_llm_invoke_config(state, "plan_search"),
+    )
 
     try:
         content = resp.content
@@ -218,10 +245,13 @@ async def correlate_findings(state: RCAState) -> dict:
     llm = get_chat_llm()
     evidence = _build_evidence_context(state)
 
-    resp = await llm.ainvoke([
-        HumanMessage(content=CORRELATE_SYSTEM_PROMPT),
-        HumanMessage(content=f"Question: {state['question']}\n\n{evidence}"),
-    ])
+    resp = await llm.ainvoke(
+        [
+            HumanMessage(content=CORRELATE_SYSTEM_PROMPT),
+            HumanMessage(content=f"Question: {state['question']}\n\n{evidence}"),
+        ],
+        config=_build_llm_invoke_config(state, "correlate_findings"),
+    )
 
     try:
         content = resp.content
@@ -265,14 +295,17 @@ async def synthesize_root_cause(state: RCAState) -> dict:
     llm = get_chat_llm()
     evidence = _build_evidence_context(state)
 
-    resp = await llm.ainvoke([
-        HumanMessage(content=SYNTHESIZE_SYSTEM_PROMPT),
-        HumanMessage(content=(
-            f"Question: {state['question']}\n"
-            f"Service: {state.get('service') or 'not specified'}\n\n"
-            f"{evidence}"
-        )),
-    ])
+    resp = await llm.ainvoke(
+        [
+            HumanMessage(content=SYNTHESIZE_SYSTEM_PROMPT),
+            HumanMessage(content=(
+                f"Question: {state['question']}\n"
+                f"Service: {state.get('service') or 'not specified'}\n\n"
+                f"{evidence}"
+            )),
+        ],
+        config=_build_llm_invoke_config(state, "synthesize_root_cause"),
+    )
 
     try:
         content = resp.content
