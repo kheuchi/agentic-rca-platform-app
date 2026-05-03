@@ -8,6 +8,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from agent.graph import rca_agent
+from agent.rca import build_initial_state, build_rca_response, build_stream_payload
 from agent.tools.code_search import search_code_vectors
 
 logger = logging.getLogger(__name__)
@@ -42,23 +43,12 @@ async def query(req: QueryRequest):
 @router.post("/query/rca")
 async def query_rca(req: RCAQueryRequest):
     """Run the LangGraph RCA agent. Supports sync or SSE streaming."""
-    initial_state = {
-        "question": req.question,
-        "service": req.service,
-        "time_range": req.time_range,
-        "code_context": [],
-        "log_findings": [],
-        "metric_findings": [],
-        "trace_findings": [],
-        "hypotheses": [],
-        "current_step": "start",
-        "iteration": 0,
-        "max_iterations": 8,
-        "root_cause": "",
-        "confidence": 0.0,
-        "evidence_summary": {},
-        "messages": [],
-    }
+    initial_state = build_initial_state(
+        question=req.question,
+        service=req.service,
+        time_range=req.time_range,
+        trace_tags=["fastapi", "rca"],
+    )
 
     if req.stream:
         return StreamingResponse(
@@ -68,30 +58,14 @@ async def query_rca(req: RCAQueryRequest):
 
     result = await rca_agent.ainvoke(initial_state)
 
-    return {
-        "root_cause": result.get("root_cause", ""),
-        "confidence": result.get("confidence", 0.0),
-        "evidence": result.get("evidence_summary", {}),
-        "iterations": result.get("iteration", 0),
-        "hypotheses": result.get("hypotheses", []),
-    }
+    return build_rca_response(result)
 
 
 async def _stream_rca(initial_state: dict):
     """Stream RCA agent steps as Server-Sent Events."""
     async for event in rca_agent.astream(initial_state, stream_mode="updates"):
         for node_name, update in event.items():
-            payload = {
-                "node": node_name,
-                "step": update.get("current_step", node_name),
-                "iteration": update.get("iteration"),
-            }
-
-            if node_name == "synthesize_root_cause":
-                payload["root_cause"] = update.get("root_cause", "")
-                payload["confidence"] = update.get("confidence", 0.0)
-                payload["evidence"] = update.get("evidence_summary", {})
-
+            payload = build_stream_payload(node_name, update)
             yield f"data: {json.dumps(payload)}\n\n"
 
     yield "data: [DONE]\n\n"

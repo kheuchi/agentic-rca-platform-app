@@ -42,7 +42,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, worker]
+        include:
+          - name: backend
+            image_name: rag-backend
+            dockerfile: backend/Dockerfile
+            context: .
+          - name: worker
+            image_name: rag-worker
+            dockerfile: worker/Dockerfile
+            context: .
+          - name: chainlit
+            image_name: rag-chainlit
+            dockerfile: chainlit_ui/Dockerfile
+            context: .
     steps:
       - uses: actions/checkout@v4
 
@@ -55,7 +67,7 @@ jobs:
       - uses: docker/metadata-action@v5
         id: meta
         with:
-          images: ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image_name }}
           tags: |
             type=semver,pattern={{version}},value=${{ needs.release.outputs.new_release_version }}
             type=semver,pattern={{major}}.{{minor}},value=${{ needs.release.outputs.new_release_version }}
@@ -65,7 +77,8 @@ jobs:
         uses: docker/build-push-action@v6
         id: build
         with:
-          context: ${{ matrix.service }}/
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
           push: false
           load: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -80,7 +93,7 @@ jobs:
       - name: Trivy vulnerability scan (before push)
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}:${{ needs.release.outputs.new_release_version }}
+          image-ref: ghcr.io/${{ github.repository_owner }}/${{ matrix.image_name }}:${{ needs.release.outputs.new_release_version }}
           format: table
           exit-code: "1"
           severity: CRITICAL,HIGH
@@ -88,13 +101,13 @@ jobs:
           trivyignores: .trivyignore
 
       - name: Push image
-        run: docker push --all-tags ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}
+        run: docker push --all-tags ghcr.io/${{ github.repository_owner }}/${{ matrix.image_name }}
 
       - name: Get image digest
         id: digest
         run: |
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' \
-            ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}:${{ needs.release.outputs.new_release_version }} \
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image_name }}:${{ needs.release.outputs.new_release_version }} \
             | cut -d@ -f2)
           echo "value=$DIGEST" >> "$GITHUB_OUTPUT"
 
@@ -104,24 +117,24 @@ jobs:
       - name: Sign image with Cosign (keyless)
         run: |
           cosign sign --yes \
-            ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.digest.outputs.value }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image_name }}@${{ steps.digest.outputs.value }}
 
       - name: Generate SBOM (SPDX)
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.digest.outputs.value }}
+          image-ref: ghcr.io/${{ github.repository_owner }}/${{ matrix.image_name }}@${{ steps.digest.outputs.value }}
           format: spdx-json
-          output: sbom-${{ matrix.service }}.spdx.json
+          output: sbom-${{ matrix.name }}.spdx.json
 
       - name: Attest SBOM to image (Cosign)
         run: |
           cosign attest --yes \
-            --predicate sbom-${{ matrix.service }}.spdx.json \
+            --predicate sbom-${{ matrix.name }}.spdx.json \
             --type spdxjson \
-            ghcr.io/${{ github.repository_owner }}/rag-${{ matrix.service }}@${{ steps.digest.outputs.value }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image_name }}@${{ steps.digest.outputs.value }}
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-${{ matrix.service }}
-          path: sbom-${{ matrix.service }}.spdx.json
+          name: sbom-${{ matrix.name }}
+          path: sbom-${{ matrix.name }}.spdx.json
