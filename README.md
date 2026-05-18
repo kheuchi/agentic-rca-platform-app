@@ -96,7 +96,15 @@ Current tools:
 | `query_prometheus_metrics` | Prometheus HTTP API / PromQL | Retrieve metrics |
 | `query_jaeger_traces` | Jaeger HTTP API | Retrieve distributed traces |
 
+In this project, those observability backends run in the `otel-demo` namespace — the OpenTelemetry Demo, an open-source project that simulates a small e-commerce application with realistic user traffic, used here as a ready-made source of logs, metrics, and traces.
+
 The agent talks to observability systems through their service APIs. It does not read logs, metrics, or traces directly from buckets, PVCs, or raw databases.
+
+## Design Notes
+
+**Code as RAG corpus.** We chose to ingest source code into the vector index, but the same pipeline handles any structured knowledge — CMDBs, runbooks, API contracts. We could have read code directly through a GitHub or GitLab MCP without any ingestion step; this project demonstrates the full RAG pipeline on a small, self-contained corpus.
+
+**Observability via HTTP APIs.** Querying OpenSearch, Prometheus, and Jaeger directly through their HTTP APIs is a demo choice. In an enterprise setting, the Grafana MCP would be the natural abstraction layer over all observability backends. The current stack is not Grafana-based, which also shaped this approach.
 
 ## API Surface
 
@@ -122,30 +130,30 @@ Endpoint details:
 
 ## Local Development
 
-From a Windows terminal, project commands are usually run through WSL.
+The following commands work natively on Linux, macOS, and WSL. On Windows, run them from a WSL terminal.
 
 Start NATS:
 
 ```bash
-wsl bash -lc "docker run -p 4222:4222 nats:latest -js"
+docker run -p 4222:4222 nats:latest -js
 ```
 
 Start the backend:
 
 ```bash
-wsl bash -lc "cd backend && pip install -r requirements.txt && uvicorn main:app --reload"
+cd backend && pip install -r requirements.txt && uvicorn main:app --reload
 ```
 
 Start the worker:
 
 ```bash
-wsl bash -lc "cd worker && pip install -r requirements.txt && python main.py"
+cd worker && pip install -r requirements.txt && python main.py
 ```
 
 Start Chainlit:
 
 ```bash
-wsl bash -lc "pip install -r chainlit_ui/requirements.txt && chainlit run chainlit_ui/app.py"
+pip install -r chainlit_ui/requirements.txt && chainlit run chainlit_ui/app.py
 ```
 
 ## Provider Strategy

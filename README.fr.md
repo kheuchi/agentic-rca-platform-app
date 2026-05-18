@@ -96,7 +96,15 @@ Outils actuels :
 | `query_prometheus_metrics` | API HTTP Prometheus / PromQL | Recuperer les metriques |
 | `query_jaeger_traces` | API HTTP Jaeger | Recuperer les traces distribuees |
 
+Dans ce projet, ces backends d'observabilite tournent dans le namespace `otel-demo` — l'OpenTelemetry Demo, un projet open-source qui simule une petite application e-commerce avec du trafic utilisateur realiste, utilise ici comme source toute prete de logs, metriques et traces.
+
 L'agent parle aux systemes d'observabilite via leurs API de service. Il ne lit pas directement les logs, metriques ou traces depuis des buckets, PVC ou bases brutes.
+
+## Notes De Design
+
+**Code comme corpus RAG.** On a choisi d'ingerer du code source dans l'index vectoriel, mais le meme pipeline gere n'importe quelle connaissance structuree — CMDB, runbooks, contrats d'API. On aurait pu lire le code directement via un MCP GitHub ou GitLab sans aucune ingestion ; ce projet illustre le pipeline RAG complet sur un petit corpus maitrise.
+
+**Observabilite via API HTTP.** Interroger directement OpenSearch, Prometheus et Jaeger via leurs API HTTP est un choix de demo. En entreprise, le MCP Grafana serait la couche d'abstraction naturelle sur l'ensemble des backends d'observabilite. La stack actuelle n'est pas Grafana, ce qui a aussi oriente cette approche.
 
 ## Surface API
 
@@ -122,30 +130,30 @@ Reference des endpoints :
 
 ## Developpement Local
 
-Depuis un terminal Windows, les commandes projet sont generalement lancees via WSL.
+Les commandes suivantes fonctionnent nativement sur Linux, macOS et WSL. Sur Windows, lancez-les depuis un terminal WSL.
 
 Demarrer NATS :
 
 ```bash
-wsl bash -lc "docker run -p 4222:4222 nats:latest -js"
+docker run -p 4222:4222 nats:latest -js
 ```
 
 Demarrer le backend :
 
 ```bash
-wsl bash -lc "cd backend && pip install -r requirements.txt && uvicorn main:app --reload"
+cd backend && pip install -r requirements.txt && uvicorn main:app --reload
 ```
 
 Demarrer le worker :
 
 ```bash
-wsl bash -lc "cd worker && pip install -r requirements.txt && python main.py"
+cd worker && pip install -r requirements.txt && python main.py
 ```
 
 Demarrer Chainlit :
 
 ```bash
-wsl bash -lc "pip install -r chainlit_ui/requirements.txt && chainlit run chainlit_ui/app.py"
+pip install -r chainlit_ui/requirements.txt && chainlit run chainlit_ui/app.py
 ```
 
 ## Strategie De Provider
