@@ -96,7 +96,7 @@ Outils actuels :
 | `query_prometheus_metrics` | API HTTP Prometheus / PromQL | Recuperer les metriques |
 | `query_jaeger_traces` | API HTTP Jaeger | Recuperer les traces distribuees |
 
-Dans ce projet, ces backends d'observabilite tournent dans le namespace `otel-demo` — l'OpenTelemetry Demo, un projet open-source qui simule une petite application e-commerce avec du trafic utilisateur realiste, utilise ici comme source toute prete de logs, metriques et traces.
+Dans ce projet, ces backends d'observabilite tournent dans le namespace `otel-demo` — l'[OpenTelemetry Demo](https://github.com/open-telemetry/opentelemetry-demo), un projet open-source qui simule une petite application e-commerce avec du trafic utilisateur realiste, utilise ici comme source toute prete de logs, metriques et traces.
 
 L'agent parle aux systemes d'observabilite via leurs API de service. Il ne lit pas directement les logs, metriques ou traces depuis des buckets, PVC ou bases brutes.
 
