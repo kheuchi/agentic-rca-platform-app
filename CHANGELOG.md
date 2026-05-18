@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/kheuchi/agentic-rca-platform-app/compare/v1.9.0...v1.10.0) (2026-05-18)
+
+
+### Features
+
+* add Chainlit Langfuse RCA UI ([#21](https://github.com/kheuchi/agentic-rca-platform-app/issues/21)) ([908e44f](https://github.com/kheuchi/agentic-rca-platform-app/commit/908e44fff8601501d71561d972abb90ce0e98fde))
+
 # [1.9.0](https://github.com/kheuchi/rag-platform-app/compare/v1.8.0...v1.9.0) (2026-04-14)
 
 
