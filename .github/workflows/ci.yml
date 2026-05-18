@@ -28,7 +28,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, worker]
+        include:
+          - name: backend
+            requirements: backend/requirements.txt
+            lint_path: backend/
+          - name: worker
+            requirements: worker/requirements.txt
+            lint_path: worker/
+          - name: chainlit
+            requirements: chainlit_ui/requirements.txt
+            lint_path: chainlit_ui/
     steps:
       - uses: actions/checkout@v4
 
@@ -37,21 +46,30 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install -r ${{ matrix.service }}/requirements.txt ruff
+        run: pip install -r ${{ matrix.requirements }} ruff
 
       - name: Lint
-        run: ruff check ${{ matrix.service }}/
+        run: ruff check ${{ matrix.lint_path }}
 
   docker-build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, worker]
+        include:
+          - name: backend
+            dockerfile: backend/Dockerfile
+            context: .
+          - name: worker
+            dockerfile: worker/Dockerfile
+            context: .
+          - name: chainlit
+            dockerfile: chainlit_ui/Dockerfile
+            context: .
     steps:
       - uses: actions/checkout@v4
 
       - name: Build image (no push)
-        run: docker build -t test-${{ matrix.service }}:${{ github.sha }} ${{ matrix.service }}/
+        run: docker build -f ${{ matrix.dockerfile }} -t test-${{ matrix.name }}:${{ github.sha }} ${{ matrix.context }}
 
       - name: Free disk space for Trivy
         run: |
@@ -62,7 +80,7 @@ jobs:
       - name: Trivy vulnerability scan
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: test-${{ matrix.service }}:${{ github.sha }}
+          image-ref: test-${{ matrix.name }}:${{ github.sha }}
           format: table
           exit-code: "1"
           severity: CRITICAL,HIGH

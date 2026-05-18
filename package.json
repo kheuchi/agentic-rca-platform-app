@@ -1,5 +1,5 @@
 {
-  "name": "rag-platform-app",
+  "name": "agentic-rca-platform-app",
   "version": "0.0.0-semantically-released",
   "private": true,
   "devDependencies": {
